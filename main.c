@@ -18,10 +18,11 @@ int main(int argc, char *argv[]){
     while(fgets(line, MAX_S_RECORD_SIZE, fin) != NULL){
         printf("%s", line);
         // process each s-record (line)
+        ProcessSRecords(line);  
 
     }
 
-    printf("Program Ran succefully\n");
+    printf("Program Ran succefully\n"); // 
 
     return 0;
 }

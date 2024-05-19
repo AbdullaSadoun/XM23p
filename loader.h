@@ -4,6 +4,7 @@
 
 #define MEMORY_SIZE 1<<16
 #define MAX_S_RECORD_SIZE 68
+#define MAX_DATA_SIZE 32
 
 //initialize IMEM and DMEM (64kib each)
 unsigned char IMEM[MEMORY_SIZE];
