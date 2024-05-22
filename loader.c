@@ -49,7 +49,7 @@ void ProcessSRecords(char line[MAX_S_RECORD_SIZE]){
 
         unsigned int lsb = checksum & 0xFF; // check if checksum is valid (ends with FF)
         if (lsb == 0xFF) { // valid checksum
-            printf("Checksum is valid for s0\n");
+            printf(" Checksum is valid for s0\n");
         } else { // invalid checksum
             printf("Invalid Checksum");
         }
