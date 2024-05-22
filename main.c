@@ -5,7 +5,6 @@ Written by: Abdulla Sadoun
 
 #include "loader.h"
 
-
 int main(int argc, char* argv[]){
 
     if (argc < 2){
@@ -26,13 +25,10 @@ int main(int argc, char* argv[]){
     char line[MAX_S_RECORD_SIZE];
     while(fgets(line, MAX_S_RECORD_SIZE, fin) != NULL){
         ProcessSRecords(line); // process each s-record (line)
-        printf("%s", line); // for debugging purposes
     }
     fclose(fin); // close the input file
 
     PrintMEM(); // print the memory
-
-    printf("\nProgram Ran succefully\n"); // for debugging purposes
 
     return 0;
 }
