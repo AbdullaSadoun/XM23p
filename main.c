@@ -7,7 +7,8 @@ Written by: Abdulla Sadoun
 
 int main(int argc, char* argv[]){
 
-    if (argc < 2){
+    char choice;
+    /*if (argc < 2){
         printf("Usage: %s <file>\n", argv[0]);
         return 1;
     }
@@ -16,19 +17,62 @@ int main(int argc, char* argv[]){
     if (fin == NULL) {
         printf("Cannot open file\n");
         return 1;
-    }
+    }*/
 
     memset(IMEM, '0', sizeof(IMEM)); // initializing IMEM to 0s
     memset(DMEM, '0', sizeof(DMEM)); // initializing DMEM to 0s
 
-    // reading the file line by line and print lines read
-    char line[MAX_S_RECORD_SIZE];
-    while(fgets(line, MAX_S_RECORD_SIZE, fin) != NULL){
-        ProcessSRecords(line); // process each s-record (line)
+    while(choice != 'q'){ // while user does not choose to quit
+        printf("===========MENU===========\n");
+        printf("l - Load file\n");
+        printf("m - Print memory\n");
+        printf("q - Quit\n");
+        printf("Enter choice: ");
+        scanf(" %c", &choice);
+
+        if(choice == 'l'){ // user chooses to load file
+            char filename[150];
+            printf("Enter filename: ");
+            scanf("%s", filename);
+
+            FILE *fin = fopen(filename, "r"); // opening input file
+                if (fin == NULL) {
+                    printf("File Open Error\n");
+                    break;
+                }
+
+            // reading the file line by line and print lines read
+            char line[MAX_S_RECORD_SIZE];
+            while(fgets(line, MAX_S_RECORD_SIZE, fin) != NULL){
+                ProcessSRecords(line); // process each s-record (line)
+            }
+
+            fclose(fin); // close the input file
+
+        } else if(choice == 'm'){ // user chooses to print memory
+            //PrintMEM(); // print the memory
+            char memchoice;
+            printf("select Memory I=IMEM D=DMEM B=both\n");
+            scanf(" %c", &memchoice);
+
+            if(memchoice == 'I' || memchoice == 'i'){ // print IMEM
+                PrintIMEM();
+            } else if(memchoice == 'D' || memchoice == 'd'){ // print DMEM
+                PrintDMEM();
+            } else if(memchoice == 'B' || memchoice == 'b'){ // print both
+                PrintMEM();
+            } else { // invalid choice
+                printf("Invalid choice\n");
+            }
+
+            break;
+
+        } else if(choice == 'q'){ // user chooses to quit
+            return 0;
+
+        } else { // invalid choice
+            printf("Invalid choice\n");
+        }
     }
-    fclose(fin); // close the input file
-
-    PrintMEM(); // print the memory
-
     return 0;
 }

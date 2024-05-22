@@ -49,9 +49,10 @@ void ProcessSRecords(char line[MAX_S_RECORD_SIZE]){
 
         unsigned int lsb = checksum & 0xFF; // check if checksum is valid (ends with FF)
         if (lsb == 0xFF) { // valid checksum
-            printf(" Checksum is valid for s0\n");
+            //printf(" Checksum is valid for s0\n");
+            printf(" was loaded succefully\n");
         } else { // invalid checksum
-            printf("Invalid Checksum");
+            printf("Invalid Checksum for s0 record\n");
         }
         
     } else if (type == '1'){ // process s1 record
@@ -69,7 +70,7 @@ void ProcessSRecords(char line[MAX_S_RECORD_SIZE]){
         if (lsb == 0xFF) { // valid checksum
             Send2IMEM(data, address,dataloopcount);
         } else { // invalid checksum
-            printf("Invalid Checksum");
+            printf("Invalid Checksum for s1 record\n");
         }
 
     } else if (type == '2'){ // process s2 record
@@ -86,11 +87,31 @@ void ProcessSRecords(char line[MAX_S_RECORD_SIZE]){
         if (lsb == 0xFF) { // valid checksum
             Send2DMEM(data, address, dataloopcount);
         } else { // invalid checksum
-            printf("Invalid Checksum");
+            printf("Invalid Checksum for s2 record\n");
         }
 
     } else if (type == '9'){ // process s9 record
         // check that its a vallid record
+
+        /*char s9[MAX_DATA_SIZE]; // get the data
+
+        for(int i = 0; i < dataloopcount+1; i+=2){ // get the data and checksum(+1)
+            s9[i] = line[i+8];
+            s9[i+1] = line[i+9];
+            TempBytePairStore[0] = s9[i]; // 
+            TempBytePairStore[1] = s9[i+1];
+            TempBytePairStore[2] = '\0';
+            checksum += strtol(TempBytePairStore, NULL, 16); // increment checksum
+        }
+
+        unsigned int lsb = checksum & 0xFF; // check if checksum is valid (ends with FF)
+        if (lsb == 0xFF) { // valid checksum
+            Send2DMEM(data, address, dataloopcount);
+        } else { // invalid checksum
+            printf("Invalid Checksum for s9 record\n");
+        }*/
+
+
 
     } else { // invalid record type case
         printf("Unknown or Invalid record type\n");
@@ -162,5 +183,39 @@ void PrintMEM(){
         }
         printf("\n");
     }
+}
+void PrintIMEM(){
 
+    int IMEMstart, IMEMend;
+
+    printf("Select IMEM range: ");
+    scanf("%x %x", &IMEMstart, &IMEMend);
+
+    // print IMEM (16 byte pairs per row)
+    printf("IMEM:\n"); // print IMEM label
+    for(int i = IMEMstart; i < IMEMend; i+=32){
+        printf("[%04x] ", i); // print address
+        for(int j = 0; j < 32; j+=2){
+            printf("%c%c ", IMEM[i+j], IMEM[i+j+1]);
+        }
+        printf("\n");
+    }
+}
+
+void PrintDMEM(){
+
+    int DMEMstart, DMEMend;
+
+    printf("Select IMEM range: ");
+    scanf("%x %x", &DMEMstart, &DMEMend);
+
+    // print IMEM (16 byte pairs per row)
+    printf("IMEM:\n"); // print IMEM label
+    for(int i = DMEMstart; i < DMEMend; i+=32){
+        printf("[%04x] ", i); // print address
+        for(int j = 0; j < 32; j+=2){
+            printf("%c%c ", DMEM[i+j], DMEM[i+j+1]);
+        }
+        printf("\n");
+    }
 }

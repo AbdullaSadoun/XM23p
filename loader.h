@@ -27,5 +27,7 @@ void ProcessSRecords(char line[MAX_S_RECORD_SIZE]);
 void Send2IMEM(char data[MAX_DATA_SIZE], char address[MAX_ADDRESS_SIZE], int dataloopcount);
 void Send2DMEM(char data[MAX_DATA_SIZE], char address[MAX_ADDRESS_SIZE], int dataloopcount);
 void PrintMEM();
+void PrintIMEM();
+void PrintDMEM();
 
 #endif //LOADER
