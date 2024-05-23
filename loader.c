@@ -1,13 +1,18 @@
 #include "loader.h"
 
 void ProcessSRecords(char line[MAX_S_RECORD_SIZE]){
+/*
+function checks if the records are valid
+if they are valid then send2xmem would be called
+to send them to appropriate memory space    
+*/
     if (line[0] != 'S' && line[0] != 's'){ // check if the line is an s-record
         printf("Not an s-record\n");
         return;
     }
 
-    char TempBytePairStore[2]; // store byte pairs temporarily
-    int checksum = 0; 
+    char TempBytePairStore[2]; // store byte pairs temporarily to use strtol
+    int checksum = 0; // initialize checksum
 
     char type = line[1]; // get the record type
 
@@ -92,26 +97,23 @@ void ProcessSRecords(char line[MAX_S_RECORD_SIZE]){
 
     } else if (type == '9'){ // process s9 record
         // check that its a vallid record
+        int i=0; // initialize i (loop counter)
+        checksum = 0; // reset checksum
 
-        /*char s9[MAX_DATA_SIZE]; // get the data
-
-        for(int i = 0; i < dataloopcount+1; i+=2){ // get the data and checksum(+1)
-            s9[i] = line[i+8];
-            s9[i+1] = line[i+9];
-            TempBytePairStore[0] = s9[i]; // 
-            TempBytePairStore[1] = s9[i+1];
+        while(line[i] != '\0' && line[i+1] != '\0' && line[i] != '\n' && line[i+1] != '\n'){
+            TempBytePairStore[0] = line[i+2]; // 
+            TempBytePairStore[1] = line[i+3];
             TempBytePairStore[2] = '\0';
             checksum += strtol(TempBytePairStore, NULL, 16); // increment checksum
+            i+=2;
         }
 
-        unsigned int lsb = checksum & 0xFF; // check if checksum is valid (ends with FF)
-        if (lsb == 0xFF) { // valid checksum
-            Send2DMEM(data, address, dataloopcount);
-        } else { // invalid checksum
-            printf("Invalid Checksum for s9 record\n");
-        }*/
-
-
+    unsigned int lsb = checksum & 0xFF; // check if checksum is valid (ends with FF)
+    if (lsb == 0xFF) { // valid checksum
+        Send2DMEM(data, address, dataloopcount);
+    } else { // invalid checksum
+        printf("Invalid Checksum for s9 record\n");
+    }
 
     } else { // invalid record type case
         printf("Unknown or Invalid record type\n");
@@ -119,9 +121,13 @@ void ProcessSRecords(char line[MAX_S_RECORD_SIZE]){
     return;
 }
 void Send2IMEM(char data[MAX_DATA_SIZE], char address[MAX_ADDRESS_SIZE], int dataloopcount){
-    // store data starting from address in IMEM
+/*
+function is called to store data in IMEM
+- converts address to integer 
+-sets bits in IMEM to data bit starting from converted address
+*/
 
-    char conversionstring[4];
+    char conversionstring[4]; // string to use strtol
     conversionstring[0] = address[0];
     conversionstring[1] = address[1];
     conversionstring[2] = address[2];
@@ -130,17 +136,20 @@ void Send2IMEM(char data[MAX_DATA_SIZE], char address[MAX_ADDRESS_SIZE], int dat
     int addr = strtol(conversionstring, NULL, 16); // get the address in decimal
 
     for(int i = 0; i <= dataloopcount; i+=2){  // store data in IMEM
-        IMEM[addr+i] = data[i];
-        IMEM[addr+i+1] = data[i+1];
+        IMEM[addr+i] = data[i]; // store data in IMEM
+        IMEM[addr+i+1] = data[i+1]; // store data in IMEM
         
     }
-
     return;
 }
 void Send2DMEM(char data[MAX_DATA_SIZE], char address[MAX_ADDRESS_SIZE], int dataloopcount){
+/*
+function is called to store data in DMEM
+- converts address to integer 
+-sets bits in DMEM to data bit starting from converted address
+*/ 
    // store data starting from address in IMEM
-
-    char conversionstring[4];
+    char conversionstring[4]; // string to use strtol
     conversionstring[0] = address[0];
     conversionstring[1] = address[1];
     conversionstring[2] = address[2];
@@ -149,13 +158,17 @@ void Send2DMEM(char data[MAX_DATA_SIZE], char address[MAX_ADDRESS_SIZE], int dat
     int addr = strtol(conversionstring, NULL, 16); // get the address in decimal
 
     for(int i = 0; i <= dataloopcount; i+=2){ // store data in IMEM
-        DMEM[addr+i] = data[i];
-        DMEM[addr+i+1] = data[i+1];
+        DMEM[addr+i] = data[i]; // store data in DMEM
+        DMEM[addr+i+1] = data[i+1]; // store data in DMEM
     }
     return;
 }
 void PrintMEM(){
-
+/*
+function is called to print both IMEM and DMEM
+- user is prompted to select range of memory to print
+- IMEM and DMEM are printed in 16 byte pairs per row or 32 bits per row
+*/
     int IMEMstart, IMEMend, DMEMstart, DMEMend;
 
     printf("Select IMEM range: ");
@@ -164,28 +177,32 @@ void PrintMEM(){
     printf("Select DMEM range: ");
     scanf("%x %x", &DMEMstart, &DMEMend);
 
-    // print IMEM (16 byte pairs per row)
+    // print IMEM (16 byte pairs per row or 32 bits per row)
     printf("IMEM:\n"); // print IMEM label
-    for(int i = IMEMstart; i < IMEMend; i+=32){
-        printf("[%04x] ", i); // print address
-        for(int j = 0; j < 32; j+=2){
-            printf("%c%c ", IMEM[i+j], IMEM[i+j+1]);
+    for(int i = IMEMstart; i < IMEMend; i+=BITS_PER_ROW){
+        printf("%04x: ", i); // print address
+        for(int j = 0; j < BITS_PER_ROW; j+=TWO_BITS_OFFSET){
+            printf("%c%c ", IMEM[i+j], IMEM[i+j+NEXT_ELEMENT_INDEX]);
         }
         printf("\n");
     }
 
-    // print DMEM (16 byte pairs per row)
+    // print DMEM (16 byte pairs per row or 32 bits per row)
     printf("DMEM:\n"); // print DMEM label
-    for(int i = DMEMstart; i < DMEMend; i+=32){
+    for(int i = DMEMstart; i < DMEMend; i+=BITS_PER_ROW){
         printf("%04x: ", i); // print address
-        for(int j = 0; j < 32; j+=2){
-            printf("%c%c ", DMEM[i+j], DMEM[i+j+1]);
+        for(int j = 0; j < BITS_PER_ROW; j+=TWO_BITS_OFFSET){
+            printf("%c%c ", DMEM[i+j], DMEM[i+j+NEXT_ELEMENT_INDEX]);
         }
         printf("\n");
     }
 }
 void PrintIMEM(){
-
+/*
+function is called to print only IMEM
+- user is prompted to select range of memory to print
+- IMEM is printed in 16 byte pairs per row or 32 bits per row
+*/
     int IMEMstart, IMEMend;
 
     printf("Select IMEM range: ");
@@ -193,17 +210,20 @@ void PrintIMEM(){
 
     // print IMEM (16 byte pairs per row)
     printf("IMEM:\n"); // print IMEM label
-    for(int i = IMEMstart; i < IMEMend; i+=32){
-        printf("[%04x] ", i); // print address
-        for(int j = 0; j < 32; j+=2){
-            printf("%c%c ", IMEM[i+j], IMEM[i+j+1]);
+    for(int i = IMEMstart; i < IMEMend; i+=BITS_PER_ROW){
+        printf("%04x: ", i); // print address
+        for(int j = 0; j < BITS_PER_ROW; j+=TWO_BITS_OFFSET){
+            printf("%c%c ", IMEM[i+j], IMEM[i+j+NEXT_ELEMENT_INDEX]);
         }
         printf("\n");
     }
 }
-
 void PrintDMEM(){
-
+/*
+function is called to print only DMEM
+- user is prompted to select range of memory to print
+- DMEM is printed in 16 byte pairs per row or 32 bits per row
+*/
     int DMEMstart, DMEMend;
 
     printf("Select IMEM range: ");
@@ -211,10 +231,10 @@ void PrintDMEM(){
 
     // print IMEM (16 byte pairs per row)
     printf("IMEM:\n"); // print IMEM label
-    for(int i = DMEMstart; i < DMEMend; i+=32){
-        printf("[%04x] ", i); // print address
-        for(int j = 0; j < 32; j+=2){
-            printf("%c%c ", DMEM[i+j], DMEM[i+j+1]);
+    for(int i = DMEMstart; i < DMEMend; i+=BITS_PER_ROW){
+        printf("%04x: ", i); // print address
+        for(int j = 0; j < BITS_PER_ROW; j+=TWO_BITS_OFFSET){
+            printf("%c%c ", DMEM[i+j], DMEM[i+j+NEXT_ELEMENT_INDEX]);
         }
         printf("\n");
     }

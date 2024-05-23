@@ -1,5 +1,7 @@
 /*
 Loader for XM-23p
+- takes in .xme files and loads them into memory
+
 Written by: Abdulla Sadoun
 */
 
@@ -7,17 +9,7 @@ Written by: Abdulla Sadoun
 
 int main(int argc, char* argv[]){
 
-    char choice;
-    /*if (argc < 2){
-        printf("Usage: %s <file>\n", argv[0]);
-        return 1;
-    }
-
-    FILE *fin = fopen(argv[1], "r"); // openning input file
-    if (fin == NULL) {
-        printf("Cannot open file\n");
-        return 1;
-    }*/
+    char choice; // char to temporarily store choice of the user
 
     memset(IMEM, '0', sizeof(IMEM)); // initializing IMEM to 0s
     memset(DMEM, '0', sizeof(DMEM)); // initializing DMEM to 0s
@@ -64,8 +56,6 @@ int main(int argc, char* argv[]){
             } else { // invalid choice
                 printf("Invalid choice\n");
             }
-
-            break;
 
         } else if(choice == 'q'){ // user chooses to quit
             return 0;

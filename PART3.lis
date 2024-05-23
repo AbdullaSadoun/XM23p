@@ -1,0 +1,80 @@
+X-Makina Assembler - Version XM-23P Single Pass+ Assembler - Release 24.04.17
+Input file name: PART3.asm
+Time of assembly: Wed 15 May 2024 22:13:03 
+  1	    	     	;
+  2	    	     	; set bits in a register counter
+  3	    	     	; ECED 3403
+  4	    	     	; 15 May 24
+  5	    	     	;
+  6	    	     	NUL equ #0
+  7	    	     	;
+  8	    	     		CODE
+  9	    	     		org	#1000
+ 10	    	     	;
+ 11	    	     	; Initialize the register whose bits we want to count
+ 12	    	     	; Assume the register R1 contains the value for which we need to count set bits
+ 13	    	     	;
+ 14	1000	6800	Main    movlz   $0,R0
+ 15	1002	5801		ld 	R0,R1	    ; testing register r1
+ 16	1004	6802		movlz	$0,R2		; set r2 as 0 (counter) 
+ 17	1006	680C	    movlz $1,R4
+ 18	1008	6800	    movlz $0,R0
+ 19	    	     	;
+ 20	    	     	CountBits
+ 21	100A	68B3		movlz	#16,R3		; r3 = 16 which are the amount of bits in r1
+ 22	    	     	;
+ 23	    	     	CountLoop
+ 24	100C	4501		cmp	R0,R1		; Check if R1 is zero
+ 25	100E	2006		bz	Done		; If R1 is zero, all bits have been checked
+ 26	1010	4022	    add	R4,R2		; Increment the count of set bits
+ 27	1012	4D01	    sra R1          ; shift r1 by 1
+ 28	1014	4223	    sub R4,R3
+ 29	1016	4503	    cmp R0,R3
+ 30	1018	2001	    bz Done
+ 31	101A	3FF8	    bra CountLoop
+ 32	    	     	Done
+ 33	    	     	;
+ 34	    	     	BWait
+ 35	101C	3FFF		bra	BWait			; Infinite loop
+ 36	    	     	;
+ 37	    	     	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ 38	    	     	;
+ 39	    	     	; Data space 
+ 40	    	     	;
+ 41	    	     		DATA
+ 42	    	     		org	#40
+ 43	    	     	;
+ 44	    	     		end	Main
+
+Successful completion of assembly - 2P
+
+** Symbol table **
+
+Constants (Equates)
+Name                               	Type	Value	Decimal
+NUL                                	CON	0000	0	PRI
+
+Labels (Code)
+Name                               	Type	Value	Decimal
+BWait                              	REL	101C	4124	PRI
+Done                               	REL	101C	4124	PRI
+CountLoop                          	REL	100C	4108	PRI
+CountBits                          	REL	100A	4106	PRI
+Main                               	REL	1000	4096	PRI
+
+Labels (Data)
+Name                               	Type	Value	Decimal
+
+Registers
+Name                               	Type	Value	Decimal
+R7                                 	REG	0007	7	PRI
+R6                                 	REG	0006	6	PRI
+R5                                 	REG	0005	5	PRI
+R4                                 	REG	0004	4	PRI
+R3                                 	REG	0003	3	PRI
+R2                                 	REG	0002	2	PRI
+R1                                 	REG	0001	1	PRI
+R0                                 	REG	0000	0	PRI
+
+.XME file: \\Mac\Home\Desktop\Computer Architecture\Lab 1\PART3.xme
+
