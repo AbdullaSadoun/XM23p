@@ -1,5 +1,5 @@
-#ifndef loader_h
-#define loader_h
+#ifndef xm23p_h
+#define xm23p_h
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,6 +24,9 @@
 unsigned char IMEM[MEMORY_SIZE];
 unsigned char DMEM[MEMORY_SIZE];
 
+/* Starting addresses buffer */
+long int I_Start_Addresses;
+
 /*functions*/
 void ProcessSRecords(char line[MAX_S_RECORD_SIZE]); // prcoesses line from xme file
 void Send2IMEM(char data[MAX_DATA_SIZE], char address[MAX_ADDRESS_SIZE], int dataloopcount); // sends the data to IMEM
@@ -32,4 +35,21 @@ void PrintMEM(); // prints both memory spaces
 void PrintIMEM(); // prints IMEM
 void PrintDMEM(); // prints DMEM
 
-#endif //LOADER
+int timecount=0; // time counter
+
+/* Declaring the Registers*/
+unsigned char Registers[8][16]; // 8 registers each has 16 bits
+#define R7 7
+#define PC 7
+
+// function to process instructions
+void process_instruction(); // process one instruction
+void fetch(); // fetches one instruction
+void decode(); // decodes one instruction
+void execute(); // executes one instruction
+
+char currentInstructionBinary[16]; // current instruction
+int currentInstructionValue; // current instruction in decimal
+char currentInstruction[4]; // current instruction in hex
+
+#endif //XM23P_H

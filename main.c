@@ -5,7 +5,7 @@ Loader for XM-23p
 Written by: Abdulla Sadoun
 */
 
-#include "loader.h"
+#include "xm23p.h"
 
 int main(int argc, char* argv[]){
 
@@ -18,6 +18,7 @@ int main(int argc, char* argv[]){
         printf("===========MENU===========\n");
         printf("l - Load file\n");
         printf("m - Print memory\n");
+        printf("f - Fetch (BETA)\n");
         printf("q - Quit\n");
         printf("Enter choice: ");
         scanf(" %c", &choice);
@@ -59,6 +60,11 @@ int main(int argc, char* argv[]){
 
         } else if(choice == 'q'){ // user chooses to quit
             return 0;
+        } else if(choice == 'f'){ // user chooses to fetch
+            // process_instruction(); 
+            fetch(); // fetches one instruction
+            //decode(); // decodes one instruction 
+            //execute(); // executes one instruction
 
         } else { // invalid choice
             printf("Invalid choice\n");

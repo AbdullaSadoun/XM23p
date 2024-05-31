@@ -1,4 +1,4 @@
-#include "loader.h"
+#include "xm23p.h"
 
 void ProcessSRecords(char line[MAX_S_RECORD_SIZE]){
 /*
@@ -134,6 +134,9 @@ function is called to store data in IMEM
     conversionstring[3] = address[3];
     
     int addr = strtol(conversionstring, NULL, 16); // get the address in decimal
+
+    // save to the start address buffer for fetching later on
+    I_Start_Addresses = addr;
 
     for(int i = 0; i <= dataloopcount; i+=2){  // store data in IMEM
         IMEM[addr+i] = data[i]; // store data in IMEM
