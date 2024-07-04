@@ -1,9 +1,12 @@
 /*
-Loader for XM-23p
-- takes in .xme files and loads them into memory
-
-Written by: Abdulla Sadoun
-*/
+ * File: main.c
+ * Description: Main file for XM-23p Emulator. Starts the CPU with all registers and memory initialized to 0. 
+ *              Provides a user interface for the emulator with options to load files, print memory, execute instructions, debug, and quit.
+ * Author: Abdulla Sadoun
+ * 
+ * - Date: 26/06/2024 
+ * 
+ */
 
 #include "xm23p.h"
 
@@ -11,19 +14,18 @@ int main(int argc, char* argv[]){
 
     char choice; // char to temporarily store choice of the user
 
-    memset(IMEM, '0', sizeof(IMEM)); // initializing IMEM to 0s
-    memset(DMEM, '0', sizeof(DMEM)); // initializing DMEM to 0s
+    // initializing CPU
+    InitializeCPU(); // makes both mem.=0, all registers=0
 
     while(choice != 'q'){ // while user does not choose to quit
-        printf("===========MENU===========\n");
-        printf("l - Load file\n");
-        printf("m - Print memory\n");
-        printf("f - Fetch (BETA)\n");
-        printf("q - Quit\n");
-        printf("Enter choice: ");
-        scanf(" %c", &choice);
+        
+        PrintMenuOptions();
 
-        if(choice == 'l'){ // user chooses to load file
+        scanf(" %c", &choice);
+        //enum{LOAD, PRINT, FETCH, DEBUG, QUIT}; // menu options
+
+        switch(choice) {
+        case 'l': { // user chooses to load file
             char filename[150];
             printf("Enter filename: ");
             scanf("%s", filename);
@@ -41,9 +43,9 @@ int main(int argc, char* argv[]){
             }
 
             fclose(fin); // close the input file
-
-        } else if(choice == 'm'){ // user chooses to print memory
-            //PrintMEM(); // print the memory
+            break;
+        }
+        case 'm': { // user chooses to print memory
             char memchoice;
             printf("select Memory I=IMEM D=DMEM B=both\n");
             scanf(" %c", &memchoice);
@@ -57,18 +59,21 @@ int main(int argc, char* argv[]){
             } else { // invalid choice
                 printf("Invalid choice\n");
             }
-
-        } else if(choice == 'q'){ // user chooses to quit
+            break;
+        }
+        case 'q': // user chooses to quit
             return 0;
-        } else if(choice == 'f'){ // user chooses to fetch
-            // process_instruction(); 
-            fetch(); // fetches one instruction
-            //decode(); // decodes one instruction 
-            //execute(); // executes one instruction
-
-        } else { // invalid choice
+        case 'f': // user chooses to fetch
+            process_instruction(); 
+            break;
+        case 'd': // user chooses to debug
+            debug(); // debug mode function
+            break;
+        default: // invalid choice
             printf("Invalid choice\n");
+            break;
         }
     }
+    
     return 0;
 }

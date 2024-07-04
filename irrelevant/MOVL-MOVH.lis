@@ -1,0 +1,41 @@
+X-Makina Assembler - Version XM-23P Single Pass+ Assembler - Release 24.04.17
+Input file name: MOVL-MOVH.asm
+Time of assembly: Wed 26 Jun 2024 13:17:40 
+  1	    	     			org #1000
+  2	    	     	MAIN
+  3	1000	7F70		movh	#EE00,R0
+  4	1002	64C8		movl	#99,R0		;set low bytes
+  5	1004	7D51		movh	#AA00,R1	;set high bytes
+  6	1006	6C42		movlz	#88,R2		;set low bytes without changing high bytes
+  7	1008	73BB		movls 	#77,R3		;set low bytes and clear high bytes
+  8	    	     	DONE
+  9	100A	3FFF		bra		DONE			; loop
+ 10	    	     	end MAIN
+Successful completion of assembly - 1P
+
+** Symbol table **
+
+Constants (Equates)
+Name                               	Type	Value	Decimal
+
+Labels (Code)
+Name                               	Type	Value	Decimal
+DONE                               	REL	100A	4106	PRI
+MAIN                               	REL	1000	4096	PRI
+
+Labels (Data)
+Name                               	Type	Value	Decimal
+
+Registers
+Name                               	Type	Value	Decimal
+R7                                 	REG	0007	7	PRI
+R6                                 	REG	0006	6	PRI
+R5                                 	REG	0005	5	PRI
+R4                                 	REG	0004	4	PRI
+R3                                 	REG	0003	3	PRI
+R2                                 	REG	0002	2	PRI
+R1                                 	REG	0001	1	PRI
+R0                                 	REG	0000	0	PRI
+
+.XME file: \\Mac\Home\Desktop\A2 Tests\MOVL-MOVH.xme
+

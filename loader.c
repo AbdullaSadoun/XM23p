@@ -1,3 +1,11 @@
+/*
+ * File: loader.c
+ * Description: Responsible for loading S-Record files into the XM-23p Emulator's memory. Parses the S-Record format and updates IMEM and DMEM accordingly.
+ * Author: Abdulla Sadoun
+ * 
+ * - Date: 26/06/2024 
+ * 
+ */
 #include "xm23p.h"
 
 void ProcessSRecords(char line[MAX_S_RECORD_SIZE]){
@@ -48,7 +56,7 @@ to send them to appropriate memory space
             TempBytePairStore[0] = line[i+8];
             TempBytePairStore[1] = line[i+9];
             TempBytePairStore[2] = '\0';
-            printf("%c", strtol(TempBytePairStore, NULL, 16)); // print ascii 
+            printf("%c", (int) strtol(TempBytePairStore, NULL, 16)); // print ascii 
             checksum += strtol(TempBytePairStore, NULL, 16); // increment checksum
         }
 
@@ -137,11 +145,23 @@ function is called to store data in IMEM
 
     // save to the start address buffer for fetching later on
     I_Start_Addresses = addr;
+    E_Start_Addresses = addr;
 
+    int evenstate = 0; // 0 = even, 1 = odd
     for(int i = 0; i <= dataloopcount; i+=2){  // store data in IMEM
-        IMEM[addr+i] = data[i]; // store data in IMEM
-        IMEM[addr+i+1] = data[i+1]; // store data in IMEM
-        
+        if(evenstate == 0){
+            IMEM[addr+i+2] = data[i]; // store data in IMEM
+            IMEM[addr+i+1+2] = data[i+1]; // store data in IMEM
+            evenstate = 1;
+        } else {
+            evenstate = 0;
+            IMEM[addr+i-2] = data[i]; // store data in IMEM
+            IMEM[addr+i+1-2] = data[i+1]; // store data in IMEM
+        }
+
+        //IMEM[addr+i] = data[i]; // store data in IMEM OG
+        //IMEM[addr+i+1] = data[i+1]; // store data in IMEM OG
+    
     }
     return;
 }

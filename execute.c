@@ -1,191 +1,65 @@
-to run: gcc -o main main.c debugger.c decode.c execute.c fetch.c loader.c xm23p.c 
-        gcc -o main main.c debugger.c decode.c execute.c fetch.c loader.c xm23p.c 
-./main
+/*
+ * File: execute.c
+ * Description: Contains the execution logic for instructions in the XM-23p Emulator. It performs arithmetic and logical operations and updates the processor status word (PSW) accordingly.
+ * Author: Abdulla Sadoun
+ * 
+ * - Date: 26/06/2024 
+ * 
+ */
+#include "xm23p.h"
 
-TO DO NEXT: 
-make the address incrememnt and save on Program Counter - PC which is register 7
-
-Implement the status Register (PSW) update function.
-     void update_psw(unsigned int src, unsigned int dst, unsigned int tempResult, int word_byte) {
-     // Clear the PSW flags
-     PSW.z = 0;
-     PSW.n = 0;
-     PSW.c = 0;
-     // PSW.v is not typically affected by CMP, so it's not updated here
-
-     // Check if the operation was on a byte or word
-     unsigned int mask = (word_byte == WORD) ? 0xFFFF : 0xFF;
-
-     // Update the Zero (Z) flag
-     if ((tempResult & mask) == 0) {
-          PSW.z = 1;
-     }
-
-Implement the rest of the funtions including compare which uses function above:
-     case CMP:
-    printf("CMP: RC=%d, WB=%d, SRC=%d, DST=%d\n", rcbuff, wbbuff, srcbuff, dstbuff); // debug printf
-    unsigned int Temp_Destination;
-    if(wbbuff == WORD){ // word comparison
-        Temp_Destination = RegistersValue[dstbuff] + ~RegistersValue[srcbuff] + 1;
-    } else { // byte comparison
-        unsigned short srcLowByte = RegistersValue[srcbuff] & 0x00FF;
-        unsigned short dstLowByte = RegistersValue[dstbuff] & 0x00FF;
-        Temp_Destination = dstLowByte + ~srcLowByte + 1;
-    }
-    // Assuming update_psw() updates the PSW based on the result of the operation
-    update_psw(RegistersValue[srcbuff], RegistersValue[dstbuff], Temp_Destination, wbbuff);
-    printf("R/C: %d\n" // Print the register/constant value
-           "W/B: %d\n" // Print the word/byte value
-           "Source: %hhx\n" // Print the value from the RegistersValue based on source
-           "Destination: %hhx\n", // Print the value from the RegistersValue based on destination
-           rcbuff, wbbuff, RegistersValue[srcbuff] & (wbbuff == WORD ? 0xFFFF : 0xFF), RegistersValue[dstbuff] & (wbbuff == WORD ? 0xFFFF : 0xFF));
-    break;
-
-Implement the MOVL-MOVH functions
-
-Implement other *DADD* to SXT functions.
-
-seperate isa.c into three files
-    fetch.c 
-    decode.c 
-    execute.c 
-
-
-
-
-
-input:
-S0   0C     0000 50     41 52 54 31 2E 61 73 6D 1C
-type length addy P(hex) A  R  T  1  .  a  s  m  checksum
-     12.    0.   80.    65 82 84 49 46 97 115 109 28
-     =767 or 2FF
-S1.  19.     1000 006A 0358 9040 0A4C 0158 0A40 9040 8B420120FA3FFF3F13
-S20F0040FFFF00100020003000400050C2
-S9031000EC
-
-output read:
-S00C000050415254312E61736D1C
-S1191000006A035890400A4C01580A4090408B420120FA3FFF3F13
-S20F0040 FF FF 00 10 00 20 00 30 00 40 00 50 C2
-S9031000EC
-
-
-for PSW:
-V - Arithmetic Overflow
-N - Negative flag
-Z - zero
-C - carry 
-
-initialising register file: 
-unsigned short regfilep[2][8] = {{0,0...},{0,1,2,3.. constants}};
-
-D.1 = D.2 + s
-d.1 = regfile[0][register#]
-d.2 = ''
-s = regfile[RC(0 or 1)][register#]
-
-
-0x006a in binary = 0b1101010
-''    in decimal = 106
-
-
-EX ISA STUFF"::::::"""""
-
-/*char IMAR[4]; // store the instruction
-unsigned short IMARValue; // to convert for shifting
-
-// temporary operand buffers
-unsigned short rcbuff, wbbuff, srcbuff, dstbuff, bitsbuff, prpobuff, decbuff, incbuff;
-unsigned short opcodebuff;
-
-enum {
-    BL, BEQBZ, BNEBNZ, BCBHS, BNCBLO, BN, BGE, BLT, BRA, 
-    ADD, ADDC, SUB, SUBC, DADD, CMP, XOR, AND, OR, 
-    BIT, BIC, BIS, MOV, SWAP, SRA, RRC, SWPB, SXT, 
-    SETPRI, SVC, SETCC, CLRCC, CEX, LD, ST, MOVL, 
-    MOVLZ, MOVLS, MOVH, LDR, STR, Error
-}; // opcode cases
+#define PRE 1
+#define POST 0
 
 #define WORD 0
 #define BYTE 1
-*/
-/*
+
+#define SET 1
+
 void updatePSW(unsigned int src, unsigned int dst, unsigned int tempResult, int wbbuff){
+/*
+function to update the PSW flags
+- it updates the PSW flags based on the result of the operation
+- it updates the Zero (Z) flag
+- it updates the Negative (N) flag
+- it updates the Carry (C) flag
+- it updates the Overflow (V) flag
+*/
     // Clear the PSW flags
-     PSW.z = 0;
-     PSW.n = 0;
-     PSW.c = 0;
-     PSW.v = 0;// check if this should be cleared too
+     PSW.z = CLEAR;
+     PSW.n = CLEAR;
+     PSW.c = CLEAR;
+     PSW.v = CLEAR;// check if this should be cleared too
      
      // Check if the operation was on a byte or word
      int mask = (wbbuff == WORD) ? 0xFFFF : 0xFF;
 
-     // Update the Zero (Z) flag
-     if ((tempResult & mask) == 0) {
-          PSW.z = 1;
+    // Update the Zero (Z) flag
+     if ((tempResult & mask) == CLEAR) {
+          PSW.z = SET;
     }
 
      // Update the Negative (N) flag
-    if ((tempResult & (mask + 1) >> 1) != 0) {
-        PSW.n = 1;
+    if ((tempResult & (mask + SET) >> SET) != CLEAR) {
+        PSW.n = SET;
     }
 
     // Update the Carry (C) flag - In the context of CMP, carry flag is set if src < dst
     if (src < dst) {
-        PSW.c = 1;
+        PSW.c = SET;
     }
     
-}*/
-
-/*
-void process_instruction(){
-    // convert the start address into binary to store in program counter
-    
-    // store the start address in program counter
-    
-    do { // keep running until 00 00 is encountered
-        fetch();
-        //timecounter++;
-
-        int instructionnumber = decode();
-        //timecounter++;
-
-        execute(instructionnumber);
-        //fetch();
-        //timecounter++;
-        
-    } while(IMARValue != 0000 && E_Start_Addresses != BreakpointValue);
 }
 
-void fetch(){ // fetch function
-
-    //char IMAR[4]; // store the instruction
-
-    // get the instruction from memory
-    IMAR[0] = IMEM[I_Start_Addresses];
-    IMAR[1] = IMEM[I_Start_Addresses+1];
-    IMAR[2] = IMEM[I_Start_Addresses+2];
-    IMAR[3] = IMEM[I_Start_Addresses+3];
-    
-    // increment the program counter (current address)
-    I_Start_Addresses += 4;
-    E_Start_Addresses += 2;
-    
-    RegistersHexString[PC][0] = I_Start_Addresses >> 12;
-
-    // return the fetched instruction
-    //printf("Instruction: %c%c%c%c\n", IMAR[0], IMAR[1],IMAR[2],IMAR[3]); // debug printf
-
-    // convert IMAR to unsigned short
-    sscanf(IMAR, "%hx", &IMARValue);
-    //printf("Instruction Value: %x\n", IMARValue); // check IMARValue
-    // return fetched instruction;
-    return;
-}
-*/
-
-/*
 void execute(int instructionnumber){ // execute function
+/*
+function to execute the instruction
+- it executes the instruction based on the internal instruction number
+- it updates the registers and PSW flags
+- it updates the HexString and Binary files for the registers
+- it prints out the execution details
+*/
+    unsigned short Temp_Destination; // temporary destination variable for swapping/replacing etc.
 
     switch(instructionnumber) { // opcode cases
     case BL:
@@ -225,6 +99,8 @@ void execute(int instructionnumber){ // execute function
         unsigned short result = srcLowByte + dstLowByte; // adding bytes
         RegistersValue[dstbuff] = (RegistersValue[dstbuff] & 0xFF00) | (result & 0x00FF);
         }
+        // update PSW flags
+        updatePSW(RegistersValue[srcbuff], RegistersValue[dstbuff], RegistersValue[dstbuff], wbbuff);
         ChangedRegistersValue(RegistersValue[dstbuff], dstbuff);
         break;
     case ADDC: // DST = DST + (SRC/CON + Carry)
@@ -277,7 +153,7 @@ void execute(int instructionnumber){ // execute function
         break;
     case CMP:
         printf("CMP: RC=%d, WB=%d, SRC=%d, DST=%d\n", rcbuff, wbbuff, srcbuff, dstbuff); // debug printf
-        unsigned int Temp_Destination;
+        //unsigned short Temp_Destination;
         if(wbbuff == WORD){ // word comparison
             Temp_Destination = RegistersValue[dstbuff] + ~RegistersValue[srcbuff] + 1;
         } else { // byte comparison
@@ -335,7 +211,7 @@ void execute(int instructionnumber){ // execute function
         break;
     case BIT:
         printf("BIT: RC=%d, WB=%d, SRC=%d, DST=%d\n", rcbuff, wbbuff, srcbuff, dstbuff); // debug printf
-        unsigned short Temp_Destination;
+        //unsigned short Temp_Destination;
         if (wbbuff == WORD) { // If operation is word-wide
             Temp_Destination = RegistersValue[dstbuff] & (1 << RegistersValue[srcbuff]);
         } else { // If operation is byte-wide
@@ -377,31 +253,87 @@ void execute(int instructionnumber){ // execute function
         ChangedRegistersValue(RegistersValue[dstbuff], dstbuff);
         break;
     case SWAP:
-        //printf("SWAP: \n");
+        printf("SWAP: SRC=%d, DST=%d\n", srcbuff, dstbuff); // debug printf
+        unsigned short temp_reg = RegistersValue[dstbuff];
+        RegistersValue[dstbuff] = RegistersValue[srcbuff];
+        RegistersValue[srcbuff] = temp_reg;
+        updatePSW(RegistersValue[srcbuff], RegistersValue[dstbuff], 0, wbbuff); // Assuming PSW needs to be updated, adjust as necessary
+        ChangedRegistersValue(RegistersValue[dstbuff], dstbuff);
+        ChangedRegistersValue(RegistersValue[srcbuff], srcbuff);
         break;
     case SRA:
-        printf("SRA: \n");
+        printf("SRA: WB=%d, DST=%d\n", wbbuff, dstbuff);
+        if (wbbuff == WORD) { // Word operation
+            unsigned short msb = RegistersValue[dstbuff] & 0x8000; // Extract MSB (bit 15)
+            RegistersValue[dstbuff] >>= 1; // Logical shift right by 1
+            RegistersValue[dstbuff] |= msb; // Preserve MSB (sign bit for arithmetic shift)
+        } else {
+            // Byte operation
+            unsigned char msb = RegistersValue[dstbuff] & 0x80; // Extract MSB (bit 7) of the low byte
+            RegistersValue[dstbuff] = (RegistersValue[dstbuff] & 0xFF00) | ((RegistersValue[dstbuff] & 0x00FF) >> 1); // Logical shift right the low byte by 1
+            RegistersValue[dstbuff] |= msb; // Preserve MSB (sign bit for arithmetic shift) in the low byte
+        }
+        //updatePSW(0, RegistersValue[dstbuff], 0, wbbuff); // Assuming PSW needs to be updated, adjust as necessary
+        ChangedRegistersValue(RegistersValue[dstbuff], dstbuff); // updates the register's HexString/binary files
         break;
     case RRC:
-        printf("RRC: \n");
+        printf("RRC: WB=%d, DST=%d\n", wbbuff, dstbuff);
+        unsigned short oldLSB;
+        if (wbbuff == WORD) {
+            // Word operation
+            oldLSB = RegistersValue[dstbuff] & 0x0001; // Extract old LSB
+            RegistersValue[dstbuff] >>= 1; // Shift right
+            if (PSW.c) { // If carry is set
+                RegistersValue[dstbuff] |= 0x8000; // Put carry into MSB
+            }
+            PSW.c = oldLSB; // Update carry with old LSB
+        } else {
+            // Byte operation
+            oldLSB = RegistersValue[dstbuff] & 0x01; // Extract old LSB of the low byte
+            RegistersValue[dstbuff] = (RegistersValue[dstbuff] & 0xFF00) | ((RegistersValue[dstbuff] & 0x00FF) >> 1); // Shift right the low byte
+            if (PSW.c) { // If carry is set
+                RegistersValue[dstbuff] |= 0x80; // Put carry into MSB of the low byte
+            }
+            PSW.c = oldLSB; // Update carry with old LSB
+        }
+        ChangedRegistersValue(RegistersValue[dstbuff], dstbuff); // updates the register's HexString/binary files
         break;
     case SWPB:
-        printf("SWPB: \n");
+        RegistersValue[dstbuff] = ((RegistersValue[dstbuff] & 0x00FF) << 8) | ((RegistersValue[dstbuff] & 0xFF00) >> 8); // Swap the high byte and low byte
+        ChangedRegistersValue(RegistersValue[dstbuff], dstbuff); // updates the register's HexString/binary files
+        printf("SWPB: DST=%d Result: %04X\n", dstbuff, RegistersValue[dstbuff]);
+        //printf("Result: %04X\n", RegistersValue[dstbuff]);
         break;
     case SXT: // keep implementing until here.
-        printf("SXT: \n");
+        if (RegistersValue[dstbuff] & 0x0080) { // If bit 7 of the low byte is 1
+            RegistersValue[dstbuff] |= 0xFF00; // Set bits 8-15 to 1 for sign extension
+        } else {
+            RegistersValue[dstbuff] &= 0x00FF; // Keep bits 8-15 as 0
+        }
+        ChangedRegistersValue(RegistersValue[dstbuff], dstbuff); // updates the register's HexString/binary files
+        printf("SXT: DST=%d Result: %04X\n", dstbuff, RegistersValue[dstbuff]);
         break;
     case SETPRI:
         printf("SETPRI: \n");
+
         break;
     case SVC:
         printf("SVC: \n");
+
         break;
     case SETCC:
         printf("SETCC: \n");
+        if (vbuff == TRUE) PSW.v = TRUE;
+        if (nbuff == TRUE) PSW.n = TRUE;
+        if (zbuff == TRUE) PSW.z = TRUE;
+        if (cbuff == TRUE) PSW.c = TRUE;
         break;
     case CLRCC:
         printf("CLRCC: \n");
+        if (vbuff == TRUE) PSW.v = FALSE;
+        if (nbuff == TRUE) PSW.n = FALSE;
+        if (zbuff == TRUE) PSW.z = FALSE;
+        if (cbuff == TRUE) PSW.c = FALSE;
         break;
     case CEX:
         printf("CEX: \n");
@@ -409,32 +341,135 @@ void execute(int instructionnumber){ // execute function
     case LD:
         //printf("LD: \n");
         printf("LD: PRPO:%d DEC:%d INC:%d WB:%d SRC:%d DST:%d\n", prpobuff, decbuff, incbuff, wbbuff, srcbuff, dstbuff); // debug printf
+        if (prpobuff == PRE) { // If pre-increment
+            if(incbuff == SET) { // If increment is set
+                if (wbbuff == WORD){ // word
+                    unsigned int EA = RegistersValue[srcbuff] + 2; // Effective address
+                    RegistersValue[dstbuff] = DMEM[EA]; // Load the word from memory and increment it
+                } else { // byte
+                    unsigned int EA = RegistersValue[srcbuff] + 1; // Effective address
+                    RegistersValue[dstbuff] = DMEM[EA]; // Load the word from memory and increment it
+                }
+            }
+            if (decbuff == SET) {
+                if (wbbuff == WORD){ // word
+                    unsigned int EA = RegistersValue[srcbuff] - 2; // Effective address
+                    RegistersValue[dstbuff] = DMEM[EA]; // Load the word from memory and increment it
+                } else { // byte
+                    unsigned int EA = RegistersValue[srcbuff] - 1; // Effective address
+                    RegistersValue[dstbuff] = DMEM[EA]; // Load the word from memory and increment it
+                }
+            }
+        } else { // If post-inc/dec
+            if(incbuff == SET) { // If increment is set
+                if (wbbuff == WORD){ // word
+                    unsigned int EA = RegistersValue[srcbuff]; // Effective address
+                    RegistersValue[dstbuff] = DMEM[EA]; // Load the word from memory and increment it
+                    EA = RegistersValue[srcbuff] + 2; // Effective address
+                } else { // byte
+                    unsigned int EA = RegistersValue[srcbuff]; // Effective address
+                    RegistersValue[dstbuff] = DMEM[EA]; // Load the word from memory and increment it
+                    EA = RegistersValue[srcbuff] + 1; // Effective address
+                }
+            }
+            if (decbuff == SET) {
+                if (wbbuff == WORD){ // word
+                    unsigned int EA = RegistersValue[srcbuff]; // Effective address
+                    RegistersValue[dstbuff] = DMEM[EA]; // Load the word from memory and increment it
+                    EA = RegistersValue[srcbuff] - 2; // Effective address
+                } else { // byte
+                    unsigned int EA = RegistersValue[srcbuff]; // Effective address
+                    RegistersValue[dstbuff] = DMEM[EA]; // Load the word from memory and increment it
+                    EA = RegistersValue[srcbuff] - 1; // Effective address
+                }
+            }
+        }
         break;
     case ST:
-        //printf("ST: \n");
         printf("LD: PRPO:%d DEC:%d INC:%d WB:%d SRC:%d DST:%d\n", prpobuff, decbuff, incbuff, wbbuff, srcbuff, dstbuff); // debug printf
+        if (prpobuff == PRE) { // If pre-increment
+            if(incbuff == SET) { // If increment is set
+                if (wbbuff == WORD){ // word
+                    unsigned int EA = RegistersValue[srcbuff] + 2; // Effective address
+                    RegistersValue[dstbuff] = DMEM[EA]; // Load the word from memory and increment it
+                } else { // byte
+                    unsigned int EA = RegistersValue[srcbuff] + 1; // Effective address
+                    RegistersValue[dstbuff] = DMEM[EA]; // Load the word from memory and increment it
+                }
+            }
+            if (decbuff == SET) {
+                if (wbbuff == WORD){ // word
+                    unsigned int EA = RegistersValue[srcbuff] - 2; // Effective address
+                    RegistersValue[dstbuff] = DMEM[EA]; // Load the word from memory and increment it
+                } else { // byte
+                    unsigned int EA = RegistersValue[srcbuff] - 1; // Effective address
+                    RegistersValue[dstbuff] = DMEM[EA]; // Load the word from memory and increment it
+                }
+            }
+        } else { // If post-inc/dec
+            if(incbuff == SET) { // If increment is set
+                if (wbbuff == WORD){ // word
+                    unsigned int EA = RegistersValue[srcbuff]; // Effective address
+                    RegistersValue[dstbuff] = DMEM[EA]; // Load the word from memory and increment it
+                    EA = RegistersValue[srcbuff] + 2; // Effective address
+                } else { // byte
+                    unsigned int EA = RegistersValue[srcbuff]; // Effective address
+                    RegistersValue[dstbuff] = DMEM[EA]; // Load the word from memory and increment it
+                    EA = RegistersValue[srcbuff] + 1; // Effective address
+                }
+            }
+            if (decbuff == SET) {
+                if (wbbuff == WORD){ // word
+                    unsigned int EA = RegistersValue[srcbuff]; // Effective address
+                    RegistersValue[dstbuff] = DMEM[EA]; // Load the word from memory and increment it
+                    EA = RegistersValue[srcbuff] - 2; // Effective address
+                } else { // byte
+                    unsigned int EA = RegistersValue[srcbuff]; // Effective address
+                    RegistersValue[dstbuff] = DMEM[EA]; // Load the word from memory and increment it
+                    EA = RegistersValue[srcbuff] - 1; // Effective address
+                }
+            }
+        }
         break;
     case MOVL:
-        //printf("MOVL: \n");
         printf("MOVL: dst:%d bits:%d\n", dstbuff, bitsbuff); // debug printf
+        RegistersValue[dstbuff] = (RegistersValue[dstbuff] & 0xFF00) | bitsbuff; // Set the low byte to bitsbuff, keep the high byte unchanged
+        ChangedRegistersValue(RegistersValue[dstbuff], dstbuff); // updates the register's HexString/binary files
         break;
     case MOVLZ:
-        //printf("MOVLZ: \n");
         printf("MOVLZ: dst:%d bits:%d\n", dstbuff, bitsbuff);
+        RegistersValue[dstbuff] = bitsbuff; // Set the low byte to bitsbuff and high byte to 0
+        ChangedRegistersValue(RegistersValue[dstbuff], dstbuff); // updates the register's HexString/binary files
         break;
     case MOVLS:
-        //printf("MOVLS: \n");
         printf("MOVLS: dst:%d bits:%d\n", dstbuff, bitsbuff);
+        RegistersValue[dstbuff] = bitsbuff | 0xFF00; // Set the low byte to bitsbuff and high byte to 0xFF
+        ChangedRegistersValue(RegistersValue[dstbuff], dstbuff); // updates the register's HexString/binary files
         break;
     case MOVH:
-        //printf("MOVH: \n");
         printf("MOVH: dst:%d bits:%d\n", dstbuff, bitsbuff);
+        RegistersValue[dstbuff] = (RegistersValue[dstbuff] & 0x00FF) | (bitsbuff << 8); // Set the high byte to bitsbuff, keep the low byte unchanged
+        ChangedRegistersValue(RegistersValue[dstbuff], dstbuff); // updates the register's HexString/binary files
         break;
     case LDR:
         printf("LDR: \n");
+        /*
+        if ((offbuff >> msb) & 0x01) {
+            offbuff |= ((0xFFFF) << msb); // Extend the sign if the msb is set
+        }
+
+        unsigned short EA = RegistersValue[dstbuff] + offbuff; // Effective address
+        */
         break;
     case STR:
-        printf("STR: \n");
+        printf("STR: \n");    
+        /*
+        if ((offbuff >> msb) & 0x01) {
+            offbuff |= ((0xFFFF) << msb); // Extend the sign if the msb is set
+        }
+
+        unsigned short EA = RegistersValue[dstbuff] + offbuff; // Effective address
+        */
         break;
     case Error:
         printf("Error: \n");
@@ -445,18 +480,3 @@ void execute(int instructionnumber){ // execute function
     }
     return; 
 }
-*/
-
-    /*do { // keep running until 00 00 is encountered
-        fetch();
-        //timecounter++;
-        
-
-        int instructionnumber = decode();
-        //timecounter++;
-
-        execute(instructionnumber);
-        //fetch();
-        //timecounter++;
-        
-    } while(IMARValue != 0000 && RegistersValue[PC] != BreakpointValue);*/
