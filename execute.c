@@ -63,31 +63,57 @@ function to execute the instruction
 
     switch(instructionnumber) { // opcode cases
     case BL:
-        printf("BL: \n");
+        printf("BL: offset:%d\n", offsetbuff); // debug printf
+        RegistersValue[LR] = RegistersValue[PC]; // make the link register equal to the PC
+        RegistersValue[PC] = RegistersValue[PC] + offsetbuff; // increment the PC by offset
         break;
-    case BEQBZ:
-        printf("BEQ/BZ: \n");
+    case BEQBZ: // Branch if equal
+        printf("BEQ/BZ: offset:%d\n", offsetbuff); // debug printf
+        if(PSW.z == TRUE){
+            RegistersValue[PC] = RegistersValue[PC] + offsetbuff; // increment the PC by offset
+        }
         break;
-    case BNEBNZ:
-        printf("BNE/BNZ: \n");
+    case BNEBNZ: // Branch if not equal
+        printf("BNE/BNZ: offset:%d\n", offsetbuff); // debug printf
+        
+        if(PSW.z == FALSE){
+            RegistersValue[PC] = RegistersValue[PC] + offsetbuff; // increment the PC by offset
+        }
         break;
-    case BCBHS:
-        printf("BC/BHS: \n");
+    case BCBHS: // Branch if carry
+        printf("BC/BHS: offset:%d\n", offsetbuff); // debug printf
+        if(PSW.c == TRUE){
+            RegistersValue[PC] = RegistersValue[PC] + offsetbuff; // increment the PC by offset
+        }
         break;
-    case BNCBLO:
-        printf("BNV/BLO: \n");
+    case BNCBLO:  // Branch if not carry
+        printf("BNV/BLO: offset:%d\n", offsetbuff); // debug printf
+        if(PSW.c == FALSE){
+            RegistersValue[PC] = RegistersValue[PC] + offsetbuff; // increment the PC by offset
+        }
         break;
-    case BN:
-        printf("BN: \n");
+    case BN: // Branch if negative
+        printf("BN: offset:%d\n", offsetbuff); // debug printf
+        if(PSW.n == TRUE){
+            RegistersValue[PC] = RegistersValue[PC] + offsetbuff; // increment the PC by offset
+        }
+
         break;
-    case BGE:
-        printf("BGE: \n");
+    case BGE: // Branch if greater than or equal
+        printf("BGE: offset:%d\n", offsetbuff); // debug printf
+        if(PSW.n == PSW.v){
+            RegistersValue[PC] = RegistersValue[PC] + offsetbuff; // increment the PC by offset
+        }
         break;
-    case BLT:
-        printf("BLT: \n");
+    case BLT: // Branch if less than
+        printf("BLT: offset:%d\n", offsetbuff); // debug printf
+        if(PSW.n != PSW.v){
+            RegistersValue[PC] = RegistersValue[PC] + offsetbuff; // increment the PC by offset
+        }
         break;
     case BRA:
-        printf("BRA: \n");
+        printf("BRA: offset:%d\n", offsetbuff); // debug printf
+        RegistersValue[PC] = RegistersValue[PC] + offsetbuff; // increment the PC by offset
         break;
     case ADD: // DST = DST + SRC/CON
         printf("ADD: RC=%d, WB=%d, SRC=%d, DST=%d\n", rcbuff, wbbuff, srcbuff, dstbuff); // debug printf); // debug printf
@@ -162,11 +188,11 @@ function to execute the instruction
             Temp_Destination = dstLowByte + ~srcLowByte + 1;
         }
         updatePSW(RegistersValue[srcbuff], RegistersValue[dstbuff], Temp_Destination, wbbuff);
-        printf("R/C: %d\n" // Print the register/constant value
+        /*printf("R/C: %d\n" // Print the register/constant value
             "W/B: %d\n" // Print the word/byte value
             "Source: %hhx\n" // Print the value from the RegistersValue based on source
             "Destination: %hhx\n", // Print the value from the RegistersValue based on destination
-        rcbuff, wbbuff, RegistersValue[srcbuff] & (wbbuff == WORD ? 0xFFFF : 0xFF), RegistersValue[dstbuff] & (wbbuff == WORD ? 0xFFFF : 0xFF));
+        rcbuff, wbbuff, RegistersValue[srcbuff] & (wbbuff == WORD ? 0xFFFF : 0xFF), RegistersValue[dstbuff] & (wbbuff == WORD ? 0xFFFF : 0xFF));*/
         ChangedRegistersValue(RegistersValue[dstbuff], dstbuff);
         break;
     case XOR:
@@ -339,95 +365,46 @@ function to execute the instruction
         printf("CEX: \n");
         break;
     case LD:
-        //printf("LD: \n");
         printf("LD: PRPO:%d DEC:%d INC:%d WB:%d SRC:%d DST:%d\n", prpobuff, decbuff, incbuff, wbbuff, srcbuff, dstbuff); // debug printf
-        if (prpobuff == PRE) { // If pre-increment
-            if(incbuff == SET) { // If increment is set
-                if (wbbuff == WORD){ // word
-                    unsigned int EA = RegistersValue[srcbuff] + 2; // Effective address
-                    RegistersValue[dstbuff] = DMEM[EA]; // Load the word from memory and increment it
-                } else { // byte
-                    unsigned int EA = RegistersValue[srcbuff] + 1; // Effective address
-                    RegistersValue[dstbuff] = DMEM[EA]; // Load the word from memory and increment it
-                }
+        EA = RegistersValue[srcbuff]; // Effective address in DMEM where data should be stored
+        if (prpobuff != POST) { // PRE-INC/DEC
+            if (incbuff == SET) { // PRE-INC
+                EA += (wbbuff == WORD) ? 2 : 1;
             }
-            if (decbuff == SET) {
-                if (wbbuff == WORD){ // word
-                    unsigned int EA = RegistersValue[srcbuff] - 2; // Effective address
-                    RegistersValue[dstbuff] = DMEM[EA]; // Load the word from memory and increment it
-                } else { // byte
-                    unsigned int EA = RegistersValue[srcbuff] - 1; // Effective address
-                    RegistersValue[dstbuff] = DMEM[EA]; // Load the word from memory and increment it
-                }
+            if (decbuff == SET) { // PRE-DEC
+                EA -= (wbbuff == WORD) ? 2 : 1;
             }
-        } else { // If post-inc/dec
-            if(incbuff == SET) { // If increment is set
-                if (wbbuff == WORD){ // word
-                    unsigned int EA = RegistersValue[srcbuff]; // Effective address
-                    RegistersValue[dstbuff] = DMEM[EA]; // Load the word from memory and increment it
-                    EA = RegistersValue[srcbuff] + 2; // Effective address
-                } else { // byte
-                    unsigned int EA = RegistersValue[srcbuff]; // Effective address
-                    RegistersValue[dstbuff] = DMEM[EA]; // Load the word from memory and increment it
-                    EA = RegistersValue[srcbuff] + 1; // Effective address
-                }
+            // Load content from dmem into destination register
+            RegistersValue[dstbuff] = DMEM[EA/2];
+        } else { // POST-INC/DEC
+            // Load content from dmem into destination register
+            RegistersValue[dstbuff] = DMEM[EA/2];
+            if (incbuff == SET) { // POST-INC
+                EA += (wbbuff == WORD) ? 2 : 1;
             }
-            if (decbuff == SET) {
-                if (wbbuff == WORD){ // word
-                    unsigned int EA = RegistersValue[srcbuff]; // Effective address
-                    RegistersValue[dstbuff] = DMEM[EA]; // Load the word from memory and increment it
-                    EA = RegistersValue[srcbuff] - 2; // Effective address
-                } else { // byte
-                    unsigned int EA = RegistersValue[srcbuff]; // Effective address
-                    RegistersValue[dstbuff] = DMEM[EA]; // Load the word from memory and increment it
-                    EA = RegistersValue[srcbuff] - 1; // Effective address
-                }
+            if (decbuff == SET) { // POST-DEC
+                EA -= (wbbuff == WORD) ? 2 : 1;
             }
         }
         break;
-    case ST:
-        printf("LD: PRPO:%d DEC:%d INC:%d WB:%d SRC:%d DST:%d\n", prpobuff, decbuff, incbuff, wbbuff, srcbuff, dstbuff); // debug printf
-        if (prpobuff == PRE) { // If pre-increment
-            if(incbuff == SET) { // If increment is set
-                if (wbbuff == WORD){ // word
-                    unsigned int EA = RegistersValue[srcbuff] + 2; // Effective address
-                    RegistersValue[dstbuff] = DMEM[EA]; // Load the word from memory and increment it
-                } else { // byte
-                    unsigned int EA = RegistersValue[srcbuff] + 1; // Effective address
-                    RegistersValue[dstbuff] = DMEM[EA]; // Load the word from memory and increment it
-                }
+    case ST: // store content of source register to DMEM[EA(uses destination register)]
+        printf("ST: PRPO:%d DEC:%d INC:%d WB:%d SRC:%d DST:%d\n", prpobuff, decbuff, incbuff, wbbuff, srcbuff, dstbuff); // debug printf
+        EA = RegistersValue[dstbuff]; // Effective address in DMEM where data should be stored
+        if (prpobuff != POST) { // PRE-INC/DEC
+            if (incbuff == SET) { // PRE-INC
+                EA += (wbbuff == WORD) ? 2 : 1;
             }
-            if (decbuff == SET) {
-                if (wbbuff == WORD){ // word
-                    unsigned int EA = RegistersValue[srcbuff] - 2; // Effective address
-                    RegistersValue[dstbuff] = DMEM[EA]; // Load the word from memory and increment it
-                } else { // byte
-                    unsigned int EA = RegistersValue[srcbuff] - 1; // Effective address
-                    RegistersValue[dstbuff] = DMEM[EA]; // Load the word from memory and increment it
-                }
+            if (decbuff == SET) { // PRE-DEC
+                EA -= (wbbuff == WORD) ? 2 : 1;
             }
-        } else { // If post-inc/dec
-            if(incbuff == SET) { // If increment is set
-                if (wbbuff == WORD){ // word
-                    unsigned int EA = RegistersValue[srcbuff]; // Effective address
-                    RegistersValue[dstbuff] = DMEM[EA]; // Load the word from memory and increment it
-                    EA = RegistersValue[srcbuff] + 2; // Effective address
-                } else { // byte
-                    unsigned int EA = RegistersValue[srcbuff]; // Effective address
-                    RegistersValue[dstbuff] = DMEM[EA]; // Load the word from memory and increment it
-                    EA = RegistersValue[srcbuff] + 1; // Effective address
-                }
+            DMEM[EA/2] = RegistersValue[srcbuff];  // Store content from source register to dmem
+        } else { // POST-INC/DEC
+            DMEM[EA/2] = RegistersValue[srcbuff];  // Store content from source register to dmem
+            if (incbuff == SET) { // POST-INC
+                EA += (wbbuff == WORD) ? 2 : 1;
             }
-            if (decbuff == SET) {
-                if (wbbuff == WORD){ // word
-                    unsigned int EA = RegistersValue[srcbuff]; // Effective address
-                    RegistersValue[dstbuff] = DMEM[EA]; // Load the word from memory and increment it
-                    EA = RegistersValue[srcbuff] - 2; // Effective address
-                } else { // byte
-                    unsigned int EA = RegistersValue[srcbuff]; // Effective address
-                    RegistersValue[dstbuff] = DMEM[EA]; // Load the word from memory and increment it
-                    EA = RegistersValue[srcbuff] - 1; // Effective address
-                }
+            if (decbuff == SET) { // POST-DEC
+                EA -= (wbbuff == WORD) ? 2 : 1;
             }
         }
         break;
@@ -451,32 +428,39 @@ function to execute the instruction
         RegistersValue[dstbuff] = (RegistersValue[dstbuff] & 0x00FF) | (bitsbuff << 8); // Set the high byte to bitsbuff, keep the low byte unchanged
         ChangedRegistersValue(RegistersValue[dstbuff], dstbuff); // updates the register's HexString/binary files
         break;
+
     case LDR:
-        printf("LDR: \n");
-        /*
-        if ((offbuff >> msb) & 0x01) {
-            offbuff |= ((0xFFFF) << msb); // Extend the sign if the msb is set
+        printf("LDR: offset:%d wb:%d src:%d dst:%d\n", offsetbuff, wbbuff, srcbuff, dstbuff); // debug printf
+        EA = RegistersValue[srcbuff] + offsetbuff; // get the Effective address
+        if(wbbuff == WORD){
+            RegistersValue[dstbuff] = DMEM[EA/2]; // Load the word from memory and increment it
+        } else { // BYTE
+            RegistersValue[dstbuff] = DMEM[EA/2] & 0x00FF; // Load the byte from memory and increment it
         }
-
-        unsigned short EA = RegistersValue[dstbuff] + offbuff; // Effective address
-        */
         break;
+
     case STR:
-        printf("STR: \n");    
-        /*
-        if ((offbuff >> msb) & 0x01) {
-            offbuff |= ((0xFFFF) << msb); // Extend the sign if the msb is set
+        printf("STR: offset:%d wb:%d src:%d dst:%d\n", offsetbuff, wbbuff, srcbuff, dstbuff); // debug printf  
+        EA = RegistersValue[dstbuff] + offsetbuff; // get the Effective address
+        if(wbbuff == WORD){
+            DMEM[EA/2] = RegistersValue[srcbuff]; // Store the word to memory and increment it
+        } else { // BYTE
+            DMEM[EA/2] = (RegistersValue[srcbuff] & 0x00FF); // Store the low byte to memory and increment it
         }
-
-        unsigned short EA = RegistersValue[dstbuff] + offbuff; // Effective address
-        */
         break;
+
     case Error:
         printf("Error: \n");
         break;
+
     default:
         printf("instruction execution code not recognized\n");
         break;
+    }
+    //printf("@IMEM:%04X IMAR:%04X, \n", RegistersValue[PC], IMARValue); // print the PC and IMAR
+    // update register binary content
+    for(int i = 0; i < 8; i++ ){
+        ChangedRegistersValue(RegistersValue[i], i);
     }
     return; 
 }

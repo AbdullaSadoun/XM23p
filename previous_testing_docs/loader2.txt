@@ -1,0 +1,178 @@
+#include <stdio.h>
+#include "xm23p.h"
+
+#define BYTES_PER_LINE 16
+#define ASCII_START_VALUE 32 // SPEACE ASCII printable characters start at space
+#define ASCII_END_VALUE 126 // ascii for ~ used for printable characters
+
+
+
+#define REGFILE_SIZE 8
+#define ARG_COUNT 2
+//#define HEX_BASE 16
+#define HEADER_START 8 // Start of header in S-Record
+#define BYTE_SIZE 2
+#define ASCII_SIZE 4
+#define IMEM_SHIFT 1
+#define DMEM_SHIFT 1
+#define BYTE_MASK 0xFF
+#define ADDRESS_SHIFT 1
+#define DATA_SHIFT 8
+#define LINE_SIZE 100
+#define READ 0x1
+#define WRITE 0x2 // RECHECK
+#define DEBUGGER_MODE 1
+#define EXECUTION_MODE 0
+
+
+
+unsigned int calculateChecksum(const char* line, int count, int dataLength) {
+    unsigned int checksum = 0;
+    int i;
+
+    // Add count and address bytes
+    for (i = 2; i < HEADER_START; i += BYTE_SIZE) {
+        unsigned int byte;
+        sscanf(line + i, "%2x", &byte);
+        checksum += byte;
+    }
+
+    // Add data bytes
+    for (i = HEADER_START; i < HEADER_START + dataLength; i += BYTE_SIZE) {
+        unsigned int byte;
+        sscanf(line + i, "%2x", &byte);
+        checksum += byte;
+    }
+
+    // Calculate checksum: least significant byte of one's complement of sum
+    checksum = (~checksum) & 0xFF;
+    return checksum;
+}
+
+void ProcessSRecords(const char* filename) {
+    unsigned int byte;
+    unsigned int data;
+
+    FILE* file = fopen(filename, "r");
+    if (!file) {
+        perror("Error opening file");
+        return;
+    }
+    char line[LINE_SIZE];
+    while (fgets(line, sizeof(line), file)) {
+        if (line[0] != 'S') continue; // Not an S-Record
+        int count, address;
+        sscanf(line + 2, "%2x%4x", &count, &address);
+        int dataLength = (count - 3) * BYTE_SIZE;
+
+        // Calculate checksum
+        unsigned int calculatedChecksum = calculateChecksum(line, count, dataLength);
+        unsigned int givenChecksum;
+        sscanf(line + 2 + count * BYTE_SIZE, "%2x", &givenChecksum);
+
+        if (calculatedChecksum != givenChecksum) {
+            printf("Checksum error in line: %s\n", line);
+            continue;
+        }
+
+        if (line[1] == '0') {
+            // S0 record: header
+            printf("Header (ASCII): ");
+            for (int i = 0; i < dataLength; i += BYTE_SIZE) {
+                sscanf(line + HEADER_START + i, "%2x", &byte);
+                printf("%c", byte);
+            }
+            printf("\n");
+            printf("Header (Bytes): ");
+            for (int i = 0; i < dataLength + BYTE_SIZE; i += BYTE_SIZE) {
+                sscanf(line + HEADER_START + i, "%2x", &byte);
+                printf("%02X ", byte);
+            }
+            printf("\n");
+        }
+        else if (line[1] == '1') {
+            // S1 record: IMEM data
+            for (int i = 0; i < dataLength; i += ASCII_SIZE) {
+                sscanf(line + HEADER_START + i, "%4x", &data);
+                IMEM[(address >> IMEM_SHIFT) + (i >> BYTE_SIZE)] = (data >> DATA_SHIFT) | ((data & BYTE_MASK) << DATA_SHIFT); // Correctly handle high and low byte
+            }
+        }
+        else if (line[1] == '2') {
+            // S2 record: DMEM data
+            for (int i = 0; i < dataLength; i += ASCII_SIZE) {
+                sscanf(line + HEADER_START + i, "%4x", &data);
+                DMEM[(address >> DMEM_SHIFT) + (i >> BYTE_SIZE)] = (data >> DATA_SHIFT) | ((data & BYTE_MASK) << DATA_SHIFT); // Correctly handle high and low byte
+            }
+        }
+        else if (line[1] == '9') {
+            // S9 record: starting address
+            sscanf(line + 4, "%4x", &address);
+            printf("Starting address: %04X\n\n", address);
+            //reg_file[7] = address; // Store starting address in PC
+            RegistersValue[PC] = address; // 
+        }
+    }
+    
+    fclose(file);
+}
+
+void PrintMEM(unsigned char* MEM) { // was void PrintMEM(unsigned char* MEM, int Range_Start, int Range_End) {
+/* function is called to print either IMEM or DMEM
+- user is prompted to select range of memory to print
+- IMEM and DMEM are printed in 16 byte pairs per row or 32 bits per row
+- At the end the byte ascii representation is printed
+*/
+    unsigned short Range_Start, Range_End;
+
+    printf("Enter Memory Range in HEX:");
+    scanf("%x %x", &Range_Start, &Range_End); 
+
+    // Loop from the start to the end of the memory range
+    for (int i = Range_Start; i < Range_End; i += BYTES_PER_LINE) {
+
+        // Print the memory address
+        printf("%04X: ", i);
+
+        // Loop through each byte in the current memory word
+        for (int j = 0; j < BYTES_PER_LINE; j++) {
+
+            // If the current byte is within the memory range, print its value
+            if (i + j < Range_End) {
+                printf("%02X ", MEM[i + j]);
+            }
+            // Otherwise, print a placeholder
+            else {
+                printf("   ");
+            }
+        }
+
+        printf(" ");
+
+        // Loop through each byte in the current memory word again
+        for (int j = 0; j < BYTES_PER_LINE; j++) {
+            // If the current byte is within the memory range
+            if (i + j < Range_End) {
+                unsigned char c = MEM[i + j];
+                // If the byte is a printable ASCII character, print it
+                if (c >= SPACE_ASCII_VALUE && c <= ASCII_PRINTABLE_END) {
+                    printf("%c", c);
+                }
+                // Otherwise, print a placeholder
+                else {
+                    printf(".");
+                }
+            }
+            // If the current byte is outside the memory range, print a placeholder
+            else {
+                printf(" ");
+            }
+        }
+        // Print a newline to separate memory words
+        printf("\n");
+    }
+    // Print an extra newline for readability
+    printf("\n");
+
+    // Wait for the user to press enter before continuing
+    getchar();
+}

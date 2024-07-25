@@ -1,54 +1,138 @@
 to run: gcc -o main main.c debugger.c decode.c execute.c fetch.c loader.c xm23p.c 
-        gcc -o main main.c debugger.c decode.c execute.c fetch.c loader.c xm23p.c 
-./main
+        gcc -o main main.c debugger.c decode.c execute.c fetch.c loader2.c loader.c xm23p.c 
+        ./main
+
+S0 0F 0000 41334134746573742E61736DD8
+
+S2 18 0060 49 6E 70 757420737472696E6720746F20636F707900E2 - 
+
+S2 1B 0080 78787878787878787878787878787878787878787878787824 - 
+
+S2 04 FE00 00FD -
+
+S1 21 0100 C8 58 F8 7F 2F 4C BF 40 06 60 FE 7F 01 6B 02 6C F7 1F 06 5F 16 5F 05 00 B2 58 B0 58 C0 45 03 - 
+
+S1 15 011E F827FF3F30803281505C884006C02F4CBF4057 -
+
+S9 03 0108 F3
+
+
+
+
+
+
+
+
+
+after the line: printf(" was loaded succefully\n"): 
+printf("Header (Bytes): ");
+            for (int i = 0; i < dataLength + BYTE_SIZE; i += BYTE_SIZE) {
+                sscanf(line + HEADER_START + i, "%2x", &byte);
+                printf("%02X ", byte);
+            }
+            printf("\n");
+
+after changing the loader check:
+
+    change loading printfs
+    
+    - processing(running code):
+        does the code run at the start
+        am i getting correct decoding
+        does the code end when it should
+        try adding a BreakpointValue
+
+    - debugger mode:
+        create the lab4 step through in debug mode (step_debugger function)
+        change adding/altering memory values
+        Test adding/altering memory values
+
+    - function executions:
+        testing of LDR and STR
+
+    - loader
+        make it look different
+        
+    
+STR OFFSET CHECKER: 11 0000000 0000110
+
+testing LDST1:
+S00C00004C445354312E61736D1C
+S2 05 0010 FF FF EC
+S1 0D 0200 80 60 00 78 01 58 00 40 08 5C 9B
+S9 03 0200 FA
+
+HEX:0200 0250
+:0000 0050
+
+
+debugging:
+1- the problem is in fetch.c, when first setting the Program counter register
+2- there might be a problem in the loader, according to .lis, imem addresses are having incorrect values.
+
+we can change the fetch to take the program counter instead of the i_start_addresses
+
+bne: 001001 1111111000 
+
+only data + checksum is 31 byte or 62 characters
+including address and length then its 34bytes or 68 characters
+so the s record line limit must be increased to 70 characters without counting the null
+
+IMEM RANGE 0000 0200
+DMEM RANGE 0000 0100
+DMEM RANGE F000 FEFF
+
+
+
+
+
+
+scanf("%02X", BYTE);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 TO DO NEXT: 
-make the address incrememnt and save on Program Counter - PC which is register 7
 
-Implement the status Register (PSW) update function.
-     void update_psw(unsigned int src, unsigned int dst, unsigned int tempResult, int word_byte) {
-     // Clear the PSW flags
-     PSW.z = 0;
-     PSW.n = 0;
-     PSW.c = 0;
-     // PSW.v is not typically affected by CMP, so it's not updated here
+    Test thet BL- Branching funcitons 
 
-     // Check if the operation was on a byte or word
-     unsigned int mask = (word_byte == WORD) ? 0xFFFF : 0xFF;
 
-     // Update the Zero (Z) flag
-     if ((tempResult & mask) == 0) {
-          PSW.z = 1;
-     }
 
-Implement the rest of the funtions including compare which uses function above:
-     case CMP:
-    printf("CMP: RC=%d, WB=%d, SRC=%d, DST=%d\n", rcbuff, wbbuff, srcbuff, dstbuff); // debug printf
-    unsigned int Temp_Destination;
-    if(wbbuff == WORD){ // word comparison
-        Temp_Destination = RegistersValue[dstbuff] + ~RegistersValue[srcbuff] + 1;
-    } else { // byte comparison
-        unsigned short srcLowByte = RegistersValue[srcbuff] & 0x00FF;
-        unsigned short dstLowByte = RegistersValue[dstbuff] & 0x00FF;
-        Temp_Destination = dstLowByte + ~srcLowByte + 1;
-    }
-    // Assuming update_psw() updates the PSW based on the result of the operation
-    update_psw(RegistersValue[srcbuff], RegistersValue[dstbuff], Temp_Destination, wbbuff);
-    printf("R/C: %d\n" // Print the register/constant value
-           "W/B: %d\n" // Print the word/byte value
-           "Source: %hhx\n" // Print the value from the RegistersValue based on source
-           "Destination: %hhx\n", // Print the value from the RegistersValue based on destination
-           rcbuff, wbbuff, RegistersValue[srcbuff] & (wbbuff == WORD ? 0xFFFF : 0xFF), RegistersValue[dstbuff] & (wbbuff == WORD ? 0xFFFF : 0xFF));
-    break;
 
-Implement the MOVL-MOVH functions
 
-Implement other *DADD* to SXT functions.
 
-seperate isa.c into three files
-    fetch.c 
-    decode.c 
-    execute.c 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

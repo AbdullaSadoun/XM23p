@@ -17,6 +17,7 @@ unsigned short BreakpointValue; // breakpoint value (global variable)
 #define SUB_LD 0x0
 #define MOV_CLRCC 0x3
 #define CEX 0x4
+#define OFFBIT 6
 
 int decode(){ // decode function
 /*
@@ -26,40 +27,57 @@ function to decode the instruction
 number for the execute function
 - it decodes in layers to distinguish and seperate functions
 */
-    enum { BLCase, BEQtoBRA, ADDtoST, MOVLtoMOVH, LLDR, LSTR}; // grouped into shared first 3 bits
+    enum { BLCase, BEQtoBRA, ADDtoST, MOVLtoMOVH, LLDR1, LLDR2, LSTR1, LSTR2}; // grouped into shared first 3 bits
 
-    if((E_Start_Addresses-2) == BreakpointValue){ // extra breakpoint check
+    /*if((E_Start_Addresses-2) == BreakpointValue){ // extra breakpoint check
         printf("Breakpoint reached3\n");
         return Error;
     }
      if((RegistersValue[PC]) == BreakpointValue){ // extra breakpoint check
         printf("Breakpoint reached4\n");
         return Error;
-    }
+    }*/
 
-    printf("decoded@%x instruction:%x ", (int) RegistersValue[PC]-2, IMARValue); // debugger printf
+    //printf("decoded@%x instruction:%x ", (int) RegistersValue[PC]-2, IMARValue); // debugger printf
     unsigned short opcode = ((IMARValue>>13)&0x07); // get first 3 bits of the instruction
-    unsigned short off = ((IMARValue>>7)&0x7f); // get the offset bit (LDR-STR)
+    offsetbuff = ((IMARValue>>7)&0x7f); // get the offset bit (LDR-STR)
     
     switch (opcode) { // first 3 bits cases
     case BLCase:
-        return BL;
+        //offsetbuff = ((IMARValue) & 0x1FFF); // get the offset
+        return BLdecode(); // BL internal number sent to execute
     case BEQtoBRA:
         return betweenBEQandBRA(IMARValue); // go to further filtering
     case ADDtoST:
         return betweenADDandST(IMARValue); // go to further filtering
     case MOVLtoMOVH:
         return betweenMOVLandMOVH(IMARValue); // go to further filtering
-    case LLDR:
-        return LDR; // LDR internal number sent to execute
-    case LSTR:
-        offbuff = off;
-        return STR; // STR internal number sent to execute
+    case LLDR1:
+        return LDRdecode(); // LDR internal number sent to execute
+    case LLDR2:
+        return LDRdecode(); // LDR internal number sent to execute
+    case LSTR1:
+        return STRdecode(); // STR internal number sent to execute
+    case LSTR2:
+        return STRdecode(); // STR internal number sent to execute
     default:
-        offbuff = off;
         printf("Error - instruction not yet implemented\n");
         return Error;
     }
+}
+
+int BLdecode(){
+/*
+function to decode the BL instruction
+- it extracts the offset from the instruction
+- it calls function to handle sign extensions
+- it returns the internal instruction number
+*/
+    offsetbuff = ((IMARValue) & 0x1FFF); // get the offset
+    //offsetbuff = offsetbuff << 1; // shift the offsetbuff to the left to get even value
+    offsetbuff = SignExt(offsetbuff, BIT_NUMBER_12); //Sign-extend the offsetbuffer
+
+    return BL; // return the internal instruction number
 }
 
 int betweenADDandST(unsigned short IMARValue){ 
@@ -82,7 +100,7 @@ buffers for the execute function
     dstbuff = ((IMARValue)&0x07); // get the destination register
 
     if (opcode == LTCASE || opcode == STCASE) { // LD or ST case
-        unsigned short opcode = ((IMARValue>>10)&0x01); // L3 opcode
+        //unsigned short opcode = ((IMARValue>>10)&0x01); // L3 opcode
         prpobuff = ((IMARValue>>9)&0x01);  // get the PRPO bits
         decbuff = ((IMARValue>>8)&0x01); // get the decrement bit
         incbuff = ((IMARValue>>7)&0x01); // get increment bit
@@ -90,17 +108,23 @@ buffers for the execute function
         srcbuff = ((IMARValue>>3)&0x07); // get the source register
         dstbuff = ((IMARValue)&0x07); // get the destination register
 
-        if (opcode == SUB_LD) { // LD case
+        //printf("opcodeLDST: %x or %d\n", opcode); // debugger printf
+
+        if (opcode == 6) { // LD case
             return LD;
-        } else { // ST case
+        } else if(opcode == 7){ // ST case
             return ST;
+        } else {
+            printf("instruction not yet implemented\n");
+            return Error;
         }
 
     } else if (opcode == MOV_CLRCC) { // MOV to CLRCC case
 
         // get L3 opcode 
-        enum{LMOV, LSWAP, LSRA, LRRC, LSWPB, LSXT, LSETPRI, LSVC, LSETCC, LCLRCC}; // local opcode cases
-        opcode == ((opcode>>10)&0x07);
+        //enum{LMOV, LSWAP, LSRA, LRRC, LSWPB, LSXT, LSETPRI, LSVC, LSETCC, LCLRCC}; // local opcode cases
+        enum{LMOV, LSWAP, LSRALSXT, LSETPRILCLRCC, LSVC, LSETCC, LCLRCC}; // local opcode cases
+        opcode = ((IMARValue>>7)&0x07);
 
         // set buffers for SETCC and CLRCC
         vbuff = ((IMARValue>>4)&0x01); // get the overflow bit
@@ -108,27 +132,41 @@ buffers for the execute function
         zbuff = ((IMARValue>>1)&0x01); // get the zero bit
         cbuff = (IMARValue&0x01); // get the carry bit
 
-        switch (opcode) { // opcode cases
+        switch (opcode) { // L3 opcode cases
         case LMOV:
             return MOV;
         case LSWAP:
             return SWAP;
-        case LSRA:
-            return SRA;
-        case LRRC:
-            return RRC;
-        case LSWPB:
-            return SWPB;
-        case LSXT:   
-            return SXT;
-        case LSETPRI:
-            return SETPRI;
-        case LSVC:
-            return SVC;
-        case LSETCC:
-            return SETCC;
-        case LCLRCC:
-            return CLRCC;
+        case LSRALSXT:
+            opcode = ((IMARValue>>3)&0x07); // get the L4 opcode
+            enum{LSRA, LRRC, LSWPB, LSXT}; // local L4 opcode cases
+            switch (opcode) {// L4 opcode cases
+            case LSRA:
+                return SRA;
+            case LRRC:
+                return RRC;
+            case LSWPB:
+                return SWPB;
+            case LSXT:
+                return SXT;
+            default:
+                printf("instruction not yet implemented\n");
+                return Error;
+            }
+        case LSETPRILCLRCC:
+            opcode = (IMARValue >> 4) & 0xf;
+            if (opcode == 8){
+                return SETPRI;
+            } else if (opcode == 9){
+                return SVC;
+            } else if (opcode == 10 || opcode == 11){
+                return SETCC;
+            } else if (opcode == 12 || opcode <= 13){
+                return CLRCC;
+            } else {
+                printf("instruction not yet implemented\n");
+                return Error;
+            }
         default:    
             printf("instruction not yet implemented\n");
             break;
@@ -220,7 +258,10 @@ function to decode the instruction between BEQ and BRA
 - it decodes functions between BEQ and BRA and sets their
 buffers for the execute function
 */
-    unsigned short opcode; // add a shift to get layer 2 opcode
+    unsigned short opcode = (IMARValue >> 10) & 0x07; // add a shift to get layer 2 opcode
+    offsetbuff = ((IMARValue) & 0x03FF); // get the offset
+    //offsetbuff = offsetbuff << 1;
+    offsetbuff = SignExt(offsetbuff, BIT_NUMBER_9); // Sign-extend the offsetbuffer (was 9 bits)
     
     enum {LBEQBZ, LBNEBNZ, LBCBHS, // local L2 opcode cases
         LBNCBLO, LBN, LBGE, LBLT, LBRA};
@@ -246,4 +287,55 @@ buffers for the execute function
         printf("instruction not yet implemented\n");
         return Error;
     }
+}
+
+int LDRdecode(){
+/*
+function to decode the LDR instruction
+- it extracts the offset from the instruction
+- it calls function to handle sign extensions
+- it returns the internal instruction number
+*/
+    wbbuff = ((IMARValue>>6)&0x01); // get the word/byte bit
+    srcbuff = ((IMARValue>>3)&0x07); // get the source register
+    dstbuff = ((IMARValue)&0x07); // get the destination register
+    offsetbuff = ((IMARValue>>7)&0x7F); // get the offset
+
+    offsetbuff = SignExt(offsetbuff, BIT_NUMBER_6);
+    return LDR;
+}
+
+int STRdecode(){
+/*
+function to decode the STR instruction
+- it extracts the offset from the instruction
+- it calls function to handle sign extensions
+- it returns the internal instruction number
+*/
+    wbbuff = ((IMARValue>>6)&0x01); // get the word/byte bit
+    srcbuff = ((IMARValue>>3)&0x07); // get the source register
+    dstbuff = ((IMARValue)&0x07); // get the destination register
+    offsetbuff = ((IMARValue>>7)&0x7F); // get the offset
+
+    offsetbuff = SignExt(offsetbuff, BIT_NUMBER_6);
+
+    return STR;
+}
+
+short SignExt(short offset, int msb) {
+/*
+Sign extension function to handle sign extensions
+- it extends the sign of the offset if the msb is set
+- it returns the offset
+*/
+
+    //offset = offset << 1; // shift the offsetbuff to the left to get even value
+
+    if ((offset >> msb) & 0x01) {
+        offset |= ((0xFFFF) << msb); // Extend the sign if the msb is set
+    }
+
+    //offset = offset << 1; // shift the offsetbuff to the left to get even value
+
+    return offset << 1;
 }

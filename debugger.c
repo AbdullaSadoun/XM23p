@@ -15,6 +15,13 @@
 unsigned short BreakpointValue;
 unsigned short timecounter; // time counter
 
+int buffer;
+unsigned short D0 = 0; // Initialize D0
+unsigned short E0 = 0; // Initialize E0
+unsigned short F0;
+unsigned short F1;
+int instructionnumber;
+
 void debug(){
     char choice2;
 
@@ -29,7 +36,7 @@ void debug(){
         printf("I - Edit in IMEM\n");
         printf("D - Edit in DMEM\n");
         printf("B - Add Breakpoint\n");
-        printf("S - Step\n");
+        printf("S - Step (debugger UI unavailable in step)\n");
         printf("T - view Time Count\n");
         printf("Q - Quit\n");
 
@@ -40,15 +47,13 @@ void debug(){
             printf("Registers:\n");
             for(int i = 0; i < 8; i++){
 
-                printf("R%d: \n", i);
-                printf("binary:");
+                printf("R%d: ", i);
+                printf("0b");
                 for(int j = 0; j < 16; j++){
                     printf("%c", RegistersBinaryString[i][j]);
                 }
-                printf("\nHex: ");
-                for(int j = 0; j < 4; j++){
-                    printf("%c", RegistersHexString[i][j]);
-                }
+                printf(" | 0x%04X", RegistersValue[i]);
+              
                 printf("\n");
             }
             // print PSW content
@@ -73,93 +78,51 @@ void debug(){
             scanf(" %c", &memchoice);
 
             if(memchoice == 'I' || memchoice == 'i'){ // print IMEM
-                PrintIMEM();
+                PrintMEM((unsigned char*)IMEM); // prints instruction memory
             } else if(memchoice == 'D' || memchoice == 'd'){ // print DMEM
-                PrintDMEM();
+                PrintMEM((unsigned char*)DMEM); // prints data memory
             } else if(memchoice == 'B' || memchoice == 'b'){ // print both
-                PrintMEM();
-            } else {
-                printf("Invalid choice, try again\n");
+                PrintMEM((unsigned char*)IMEM); // prints instruction memory
+                PrintMEM((unsigned char*)DMEM); // prints data memory
+            } else { // invalid choice
+                printf("Invalid choice\n");
             }
         
         } else if(choice2 == 'i' || choice2 == 'I'){ // edit a value in IMEM
-            printf("Enter address(Hex): ");
-            char addresschar[4];
-            scanf("%s", addresschar);
-            printf("Enter new content(hex): ");
-            char newcontent[4];
-            scanf("%s", newcontent);
-            Send2IMEM(newcontent, addresschar, 2);
+            unsigned short address, content;
+            printf("Enter address (hex): ");
+            scanf("%hx", &address);
+            printf("Enter new content (hex): ");
+            scanf("%hx", &content);
+            IMEM[address/2] = content;
 
         } else if(choice2 == 'd' || choice2 == 'D'){ // edit in DMEM
-            printf("Enter address(Hex): ");
-            char addresschar[4];
-            scanf("%s", addresschar);
-            printf("Enter new content(hex): ");
-            char newcontent[4];
-            scanf("%s", newcontent);
-            Send2DMEM(newcontent, addresschar, 2);
+            unsigned short address, content;
+            printf("Enter address (hex): ");
+            scanf("%hx", &address);
+            printf("Enter new content (hex): ");
+            scanf("%hx", &content);
+            DMEM[address/2] = content;
 
         } else if(choice2 == 'b' || choice2 == 'B'){ // add a breakpoint
-            // breakpoint to stop program counter from incrementing
-            /*printf("Breakpoint locaiton in Hex?: \n");
-            scanf("%s", Breakpoint);
-            BreakpointValue = strtol(Breakpoint, NULL, 16);
-            printf("Breakpoint added at %x\n", BreakpointValue);*/
-            //unsigned short BreakpointValue;
             printf("Breakpoint locaiton in Hex?: ");
-            scanf("%x", &BreakpointValue);
+            scanf("%hx", &BreakpointValue); // was %x
             printf("Breakpoint added at %x\n", BreakpointValue);
 
         } else if(choice2 == 's' || choice2 == 'S'){
-            fetch();
-            I_Start_Addresses += 4;
-            E_Start_Addresses += 2;
-            RegistersValue[PC] = E_Start_Addresses;
-            ChangedRegistersValue(RegistersValue[PC], PC);
-            timecounter++;
-            if (IMARValue == 0000 || RegistersValue[PC]-2 == BreakpointValue) {// || (E_Start_Addresses-2) == BreakpointValue){
-                printf("Breakpoint reached or the end of exec.\n");
-                break;
-            }
-            int instructionnumber = decode();
-            timecounter++;
-            execute(instructionnumber);
-            fetch();
-            timecounter++;
+            // step_debugger();
+            step();
 
         } else if(choice2 == 't' || choice2 == 'T'){ // view the time counter value
             printf("Time Count: %d\n", timecounter);
 
         } else if (choice2 == 'a' || choice2 == 'A'){ // run in debug mode
-            //printf("Clock PC Instruction Fetch Decode Execute\n");
-
-            /*fetch(); // Fetch
-            printf("%d %04X %04X F0: %04X ", timecounter++, RegistersValue[PC], currentInstruction, I_Start_Addresses);
-            I_Start_Addresses += 4; // Assuming I_Start_Addresses is used for fetch address
-            E_Start_Addresses += 2; // Assuming E_Start_Addresses is used for execute address
-            RegistersValue[PC] = E_Start_Addresses; // Update PC
-            // Decode
-            int instructionnumber = decode();
-            printf("D0: %04X ", instructionnumber);
-            // Execute
-            execute(instructionnumber);
-            printf("E0: %04X\n", E_Start_Addresses - 2); // Assuming the execute address is updated in the execute function
-            // Check for breakpoint or end condition
-            if (IMARValue == 0000 || RegistersValue[PC] - 2 == BreakpointValue) {
-                printf("Breakpoint reached or the end of execution.\n");
-                break;
-            }
-            // Simulate the delay between fetch, decode, and execute for the next instruction
-            printf("%d F1: %04X E0: %04X\n", timecounter++, currentInstruction, E_Start_Addresses - 2);
-            // Increment time counter for each stage
-            timecounter += 3; // Assuming each stage (fetch, decode, execute) takes one time unit
-            */
             printf("Running in debug mode!!\n");
             process_instruction_debugger();
         
         } else if(choice2 == 'q' || choice2 == 'Q'){ // Quit
             return;
+
         } else {
             printf("Invalid choice, try again\n");
         } 
@@ -241,32 +204,126 @@ function to process the instruction in debugger mode
 - it decodes the instruction
 - it executes the instruction and fetches next one
 - it increments the time counter
-- it prints out what occured in the right sequence
+- it prints out what process has occured in the right sequence
 */
 
-    printf("Clock PC Instruction Fetch Decode Execute\n");
+    printf("Clock\tPC\tInstruction\tFetch\t\tDecode\tExecute\n");
+    int firstrun = TRUE;
+    //unsigned short D0 = 0; // Initialize D0
+    //unsigned short E0 = 0; // Initialize E0
+    fetch(); // just to stop IMAR from being 0
 
-    while(TRUE){
+    while(!(IMARValue == 0x0000 || RegistersValue[PC] == BreakpointValue)){
+        
+        fetch();
+        // unsigned short F0 = RegistersValue[PC]; // Initialize F0
+        // unsigned short F1 = IMARValue; // Initialize F1
+        F0 = RegistersValue[PC]; // Initialize F0
+        F1 = IMARValue; // Initialize F1
 
+        int instructionnumber = decode(); // doesnt need pc
+
+        RegistersValue[PC] += 2;
+        ChangedRegistersValue(RegistersValue[PC], PC);
+
+        printf("%d\t%04X\t%04X\t\tF0:%04X\t\tD0:%04X\n", timecounter, RegistersValue[PC], IMARValue, F0, D0);
+
+        timecounter++;
+
+        printf("%d\t\t \t\tF1:%04X\t\t\tE0:%04X \t", timecounter, F1, E0);
+
+        if(firstrun == TRUE){
+            buffer = instructionnumber;
+            printf("\n");
+            fetch(); // fetches next instruction F1
+            D0 = F1;
+            E0 = D0;
+            firstrun = FALSE;
+            timecounter++;
+        } else {
+            execute(buffer); // executes current instruction. E0
+            fetch(); // fetches next instruction F1
+            D0 = F1;
+            E0 = D0;
+            buffer = instructionnumber;
+            timecounter++;
+        }
+    }
+}
+
+void step_debugger(){
+/*
+function to step through the instructions in debugger mode
+- it fetches the instruction
+- it decodes the instruction
+- it executes the instruction and fetches next one
+*/
+    printf("function is temporary unavailable\n");
+    /*
+    if(timecounter == 0){
+        // initialize variables
+        printf("Clock\tPC\tInstruction\tFetch\t\tDecode\tExecute\n");
+ 
+        D0 = 0; // Initialize D0
+        E0 = 0; // Initialize E0    
+        buffer;
+
+        //go through loop cycle 1
         fetch();
         I_Start_Addresses += 4;
         E_Start_Addresses += 2;
         RegistersValue[PC] = E_Start_Addresses;
         ChangedRegistersValue(RegistersValue[PC], PC);
-        timecounter++;
+        F0 = RegistersValue[PC]-2;
+        F1 = IMARValue; // Initialize F1
 
-        if (IMARValue == 0000 || RegistersValue[PC]-2 == BreakpointValue) {// || (E_Start_Addresses-2) == BreakpointValue){
+        if (IMARValue == 0000 || RegistersValue[PC]-2 == BreakpointValue) {
             printf("Breakpoint reached or the end of exec.\n");
-            break;
+            return;
         }
 
-        int instructionnumber = decode();
+        instructionnumber = decode(); // D0 runs with F0
+
+        printf("%d\t%04X\t%04X\t\tF0:%04X\t\tD0:%04X\n", timecounter, RegistersValue[PC]-2, IMARValue, F0, D0);
+
+        timecounter++;
+    } else if(timecounter == 1){
+        printf("%d\t\t \t\tF1:%04X\t\t\tE0:%04X \t", timecounter, F1, E0);
+
+            buffer = instructionnumber;
+            printf("\n");
+            fetch(); // fetches next instruction F1
+            D0 = F1;
+            E0 = D0;
+            timecounter++;
+    } else if(timecounter % 2 == 0) { // F0 and D0
+        // go through other loop cycles
+        fetch();
+        I_Start_Addresses += 4;
+        E_Start_Addresses += 2;
+        RegistersValue[PC] = E_Start_Addresses;
+        ChangedRegistersValue(RegistersValue[PC], PC);
+        F0 = RegistersValue[PC]-2;
+        F1 = IMARValue; // Initialize F1
+
+        if (IMARValue == 0000 || RegistersValue[PC]-2 == BreakpointValue) {
+            printf("Breakpoint reached or the end of exec.\n");
+            return;
+        }
+        int instructionnumber = decode(); // D0 runs with F0
+        
+        printf("%d\t%04X\t%04X\t\tF0:%04X\t\tD0:%04X\n", timecounter, RegistersValue[PC]-2, IMARValue, F0, D0);
         timecounter++;
 
-        execute(instructionnumber); // executes current instruction. 
-        fetch(); // fetches next instruction
+    } else {
+        // go through other loop cycles (1, 3 etc)
+        printf("%d\t\t \t\tF1:%04X\t\t\tE0:%04X \t", timecounter, F1, E0);
+        execute(buffer); // executes current instruction. E0
+        fetch(); // fetches next instruction F1
+        D0 = F1;
+        E0 = D0;
+        buffer = instructionnumber;
         timecounter++;
-
-    }
+    }*/
     return;
 }

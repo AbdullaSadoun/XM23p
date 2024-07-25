@@ -1,0 +1,77 @@
+X-Makina Assembler - Version XM-23P Single Pass+ Assembler - Release 24.04.17
+Input file name: LDST1.asm
+Time of assembly: Thu 11 Jul 2024 21:32:37 
+  1	    	     	;
+  2	    	     	; Example of direct addressing
+  3	    	     	; Load and store
+  4	    	     	;
+  5	    	     	; V1 <- V1 + 2
+  6	    	     	;
+  7	    	     		data
+  8	    	     		org	#10
+  9	0010	FFFF	V1	word	#FFFF
+ 10	    	     	;
+ 11	    	     		code
+ 12	    	     		org	#200
+ 13	    	     	LDST1
+ 14	    	     	;
+ 15	    	     	; Get address of V1 into R0
+ 16	    	     	;
+ 17	0200	6080		movl	V1,R0		; R0 = #??00 so R0 should be 
+ 18	0202	7800		movh	V1,R0		; R0 = #0010
+ 19	    	     	;
+ 20	    	     	; R1 <- mem[R0]
+ 21	    	     	;
+ 22	    	     	; R0 contains the effective address
+ 23	    	     	; mem[R0] is rvalue (a value or expression)
+ 24	    	     	; R1 is lvalue (where the result is to be stored)
+ 25	    	     	;
+ 26	    	     	; LD from-memory (rvalue),to-register (lvalue)
+ 27	    	     	;                           means that r0 should be address to get ffff into r1
+ 28	0204	5801		LD	R0,R1		; R1 <- #FFFF 
+ 29	    	     	;
+ 30	0206	4000		ADD	R0,R0		; R0 <- R0 + R0
+ 31	    	     	;
+ 32	    	     	; mem[R0] <- R1
+ 33	    	     	;
+ 34	    	     	; R1 is rvalue
+ 35	    	     	; R0 is the effective address
+ 36	    	     	; mem[R0] is lvalue
+ 37	    	     	; 
+ 38	0208	5C08		ST	R1,R0
+ 39	    	     	;
+ 40	    	     	; Put breakpoint on next address
+ 41	    	     	;
+ 42	    	     	BrkPtHere
+ 43	    	     	;
+ 44	    	     		end LDST1
+
+Successful completion of assembly - 1P
+
+** Symbol table **
+
+Constants (Equates)
+Name                               	Type	Value	Decimal
+
+Labels (Code)
+Name                               	Type	Value	Decimal
+BrkPtHere                          	REL	020A	522	PRI
+LDST1                              	REL	0200	512	PRI
+
+Labels (Data)
+Name                               	Type	Value	Decimal
+V1                                 	REL	0010	16	PRI
+
+Registers
+Name                               	Type	Value	Decimal
+R7                                 	REG	0007	7	PRI
+R6                                 	REG	0006	6	PRI
+R5                                 	REG	0005	5	PRI
+R4                                 	REG	0004	4	PRI
+R3                                 	REG	0003	3	PRI
+R2                                 	REG	0002	2	PRI
+R1                                 	REG	0001	1	PRI
+R0                                 	REG	0000	0	PRI
+
+.XME file: \\Mac\Home\Desktop\Computer Architecture\Assembler\LDST1.xme
+

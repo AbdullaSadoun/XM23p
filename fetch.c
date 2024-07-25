@@ -18,20 +18,19 @@ function to process the instruction
 - it executes the instruction
 - it increments the time counter
 */
+    //int count=0;
+    fetch(); // fetches the instruction
+    printf("IMARValue:%04X @PC=%04X \n", IMARValue, RegistersValue[PC]); // debug printf
 
-    while(TRUE){
+    while(!(IMARValue == 0x0000 || RegistersValue[PC] == BreakpointValue)) { //|| count >= 50
 
         fetch();
-        I_Start_Addresses += 4;
-        E_Start_Addresses += 2;
-        RegistersValue[PC] = E_Start_Addresses;
+        printf("IMARValue:%04X @PC=%04X\t", IMARValue, RegistersValue[PC]); // debug printf
+        RegistersValue[PC] += 2;
         ChangedRegistersValue(RegistersValue[PC], PC);
-        timecounter++;
 
-        if (IMARValue == 0000 || RegistersValue[PC]-2 == BreakpointValue) {// || (E_Start_Addresses-2) == BreakpointValue){
-            printf("Breakpoint reached or the end of exec.\n");
-            break;
-        }
+
+        timecounter++;
 
         int instructionnumber = decode();
         timecounter++;
@@ -39,8 +38,9 @@ function to process the instruction
         execute(instructionnumber); // executes current instruction. 
         fetch(); // fetches next instruction
         timecounter++;
+    } 
 
-    }
+    printf("Breakpoint reached or the end of exec.\n");
 }
 
 void fetch(){ // fetch function
@@ -49,15 +49,35 @@ function to fetch the instruction
 - it fetches the instruction from memory
 - it returns the fetched instruction
 */
-    //char IMAR[4]; // store the instruction
-
-    // get the instruction from memory
-    IMAR[0] = IMEM[I_Start_Addresses];
-    IMAR[1] = IMEM[I_Start_Addresses+1];
-    IMAR[2] = IMEM[I_Start_Addresses+2];
-    IMAR[3] = IMEM[I_Start_Addresses+3];
-    
-    sscanf(IMAR, "%hx", &IMARValue);  // convert IMAR to unsigned short
+    IMARValue = IMEM[RegistersValue[PC]/2]; // because IMEM is unsigned short
 
     return;
+}
+
+void step(){
+/*
+function to step through the instructions
+- it fetches the instruction
+- it decodes the instruction
+- it executes the instruction
+- it increments the time counter
+*/
+    fetch();
+
+    if(IMARValue == 0x0000 || RegistersValue[PC] == BreakpointValue){
+        printf("Breakpoint reached or the end of exec.\n");
+        return;
+    } else {
+        fetch();
+        printf("IMARValue:%04X @PC=%04X \n", IMARValue, RegistersValue[PC]); // debug printf
+        
+        RegistersValue[PC] += 2;
+        ChangedRegistersValue(RegistersValue[PC], PC);
+
+        int instructionnumber = decode();
+
+        execute(instructionnumber); // executes current instruction. 
+        return;
+    }
+    
 }
