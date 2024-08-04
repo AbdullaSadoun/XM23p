@@ -16,7 +16,7 @@ unsigned short BreakpointValue; // breakpoint value (global variable)
 #define STCASE 0x6
 #define SUB_LD 0x0
 #define MOV_CLRCC 0x3
-#define CEX 0x4
+#define LCEX 0x4
 #define OFFBIT 6
 
 int decode(){ // decode function
@@ -173,7 +173,11 @@ buffers for the execute function
             return Error;
         }
 
-    } else if (opcode == CEX) { // CEX case
+    } else if (opcode == LCEX) { // CEX case
+        // extracting operands
+        condition_prefix_buff = ((IMARValue >> 6) & 0x0F); // get condition prefix
+        tcountbuff = ((IMARValue>>3)&0x07); // get true bits
+        fcountbuff = ((IMARValue)&0x07); // get false bits
         return CEX;
 
     } else { // ADD to BIS case
@@ -329,13 +333,9 @@ Sign extension function to handle sign extensions
 - it returns the offset
 */
 
-    //offset = offset << 1; // shift the offsetbuff to the left to get even value
-
     if ((offset >> msb) & 0x01) {
         offset |= ((0xFFFF) << msb); // Extend the sign if the msb is set
     }
-
-    //offset = offset << 1; // shift the offsetbuff to the left to get even value
 
     return offset << 1;
 }

@@ -17,8 +17,6 @@ int main(int argc, char* argv[]){
     // initializing CPU
     InitializeCPU(); // makes both mem.=0, all registers=0
 
-
-
     while(choice != 'q'){ // while user does not choose to quit
         
         PrintMenuOptions();

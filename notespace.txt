@@ -1,20 +1,47 @@
 to run: gcc -o main main.c debugger.c decode.c execute.c fetch.c loader.c xm23p.c 
+        gcc -o main main.c debugger.c decode.c execute.c fetch.c loader.c xm23p.c run.c
+
         gcc -o main main.c debugger.c decode.c execute.c fetch.c loader2.c loader.c xm23p.c 
         ./main
 
-S0 0F 0000 41334134746573742E61736DD8
+S0 10 0000 4345586571746573742E61736D0A
+S2 05 0010 FFFFEC
+S1 13 1000 BF4DDF4DA74D12508060806081608160CC
+S9 03 1000 EC
 
-S2 18 0060 49 6E 70 757420737472696E6720746F20636F707900E2 - 
+IMEM: 1000 1020
+DMEM: 0000 0020
 
-S2 1B 0080 78787878787878787878787878787878787878787878787824 - 
 
-S2 04 FE00 00FD -
 
-S1 21 0100 C8 58 F8 7F 2F 4C BF 40 06 60 FE 7F 01 6B 02 6C F7 1F 06 5F 16 5F 05 00 B2 58 B0 58 C0 45 03 - 
 
-S1 15 011E F827FF3F30803281505C884006C02F4CBF4057 -
 
-S9 03 0108 F3
+
+
+
+BL: 9+1/2 steps -1
+LD: 11+1/2 steps done
+ST: 20/2 9step
+LDR: 28/2 14-1=13 look at dmem: fef0 to fff0
+STR: 40/2 15 check fef0 to fff0
+BNE: check later 19 to 20 steps (cmp before it)
+FINAL: 
+
+
+I need 11 steps to get to writesubr: 
+before LDR bservations:
+    r0 should have character to be written
+    r1 should be 0060 not 0061
+    r2 is correct 
+
+check dmem: fe00 to ffff
+
+Afrter LDR (@0122)
+
+
+
+
+
 
 
 

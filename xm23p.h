@@ -8,7 +8,6 @@
  * - Date: 26/06/2024 
  * 
  */
-
 #ifndef xm23p_h
 #define xm23p_h
 
@@ -67,7 +66,7 @@ unsigned short I_Start_Addresses;
 void InitializeCPU(); // initializes CPU
 void PrintMenuOptions(); // prints menu options
 
-/* loader functions */
+/* loader.c functions */
 void ProcessSRecords(const char* filename); // prcoesses line from xme file
 void PrintMEM(unsigned char* MEM); // prints both memory spaces
 unsigned int calculateChecksum(const char* line, int count, int dataLength); // calculates checksum
@@ -115,6 +114,8 @@ unsigned short rcbuff, wbbuff, srcbuff, dstbuff, // temporary operand buffers
 short offsetbuff; 
 unsigned short prpobuff, decbuff, incbuff, offbuff; // temporary operand buffers for DMEM functions
 unsigned short vbuff, nbuff, zbuff, cbuff; // SETCC and CLRCC buffers
+unsigned short condition_prefix_buff;
+int tcountbuff, fcountbuff; // immediate value
 int decode(); // decodes one instruction
 int BLdecode(); // function to decode BL instruction
 int betweenADDandST(unsigned short IMARValue); // ADD to ST instruction
@@ -137,6 +138,13 @@ void execute(int instructionnumber); // executes one instruction
 unsigned short EA; // effective address
 unsigned short loadtoregister(unsigned short EA); // load from memory
 void storeinmemory(unsigned short EA, unsigned short RegisterValue);
+enum{EQ, NE, CSHS, CCLO, MI, PL, VS, VC, HI, LS, GE, LT, GT, LE, TR, FL}; // enum for the cex conditions cases
+//#define CEX_IS_DISABLED ((fcountbuff == CLEAR) && (tcountbuff == CLEAR))
+int cex_condition; // cex true in effect flag
+void cex_enabled(int instructionnumber);
+unsigned short TC, FC; // true and false counters
+
+
 
 char currentInstructionBinary[BITS_PER_REGISTER]; // current instruction
 int currentInstructionValue; // current instruction in decimal
@@ -151,11 +159,6 @@ void ChangedRegistersValue(unsigned short newcontent, int regnum); // change the
 void ChangedRegistersHexString(char newcontent[HEX_CHARS_PER_REGISTER], int regnum); // change the registers hex string
 void process_instruction_debugger(); // process all instruction in debug mode
 void step_debugger(); // step in debug mode
-
-
-//void UpdateRegistersValue(unsigned short newcontent, int regnum); // update the registers value
-//char Breakpoint[4]; // breakpoint
-//unsigned short opcodebuff;
 
 
 /* xm23p.c */

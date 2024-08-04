@@ -1,0 +1,100 @@
+X-Makina Assembler - Version XM-23P Single Pass+ Assembler - Release 24.04.17
+Input file name: CEXtest.asm
+Time of assembly: Sun 4 Aug 2024 01:38:46 
+  1	    	     	;
+  2	    	     	; Test of A5 (Conditional Execution)
+  3	    	     	; Tests multiple conditions
+  4	    	     	; Tests true and false
+  5	    	     	;
+  6	    	     	; data segment
+  7	    	     	; FFFF stored in DMEM[FFFF]
+  8	    	     	    data
+  9	    	     	    org #FFFF
+ 10	FFFF	FFFF	V1	word	#FFFF
+ 11	    	     	;
+ 12	    	     	;
+ 13	    	     	;code segment
+ 14	    	     	    code
+ 15	    	     	    org #1000
+ 16	    	     	MAIN
+ 17	    	     	;
+ 18	    	     	; ensure psw is cleared
+ 19	1000	4DDF		clrcc	vsnzc ; check to see if the instruction works (PSW:00000)
+ 20	    	     	;
+ 21	    	     	;
+ 22	1002	4DA7	   setcc   nzc ; Set N, Z, C flags (PSW: 00111)
+ 23	    	     	                ; EQ, CS, MI, LE, VC should be true
+ 24	    	     	                ; NE, PL, CC, GE, LT, GT should be false
+ 25	    	     	;
+ 26	    	     	; testing EQ - true
+ 27	1004	5009	    cex     eq,$1,$1 ; eq is true so r0=00ff
+ 28	1006	67F8	    movl    V1,R0; instruction to get r0=00FF if true
+ 29	1008	7FF8	    movh    V1,R0; instruction to get r0=FF00 if false
+ 30	    	     	; expected R0:00FF
+ 31	    	     	;
+ 32	    	     	;
+ 33	    	     	; testing NE - false
+ 34	100A	504A	    cex     ne,$1,$2
+ 35	100C	67F9	    movl    V1,R1; instruction to get r1=00FF if true
+ 36	100E	67F9	    movl    V1,R1; instruction to get r1=FFFF if false
+ 37	1010	7FF9	    movh    V1,R1; instruction to get r1=FFFF if false
+ 38	    	     	; expected R1:FFFF
+ 39	    	     	;
+ 40	    	     	;
+ 41	    	     	; testing LS - true
+ 42	1012	5251	    cex     ls,$2,$1
+ 43	1014	67FA	    movl    V1,R2; instruction to get r2=FFFF if true
+ 44	1016	7FFA	    movh    V1,R2; instruction to get r2=FFFF if true
+ 45	1018	67FA	    movl    V1,R2; instruction to get r2=00FF if false
+ 46	    	     	; expected R2:FFFF
+ 47	    	     	;
+ 48	    	     	;
+ 49	    	     	; testing LS - true
+ 50	101A	5252	    cex     ls,$2,$2
+ 51	101C	67FB	    movl    V1,R3; instruction to get r3=00FF if true
+ 52	101E	401B	    add     R3,R3; instruction to get r3=01FE if true
+ 53	1020	67FB	    movl    V1,R3; instruction to get r3=00FF if false
+ 54	1022	7FFB	    movh    V1,R3; instruction to get r3=FFFF if false
+ 55	    	     	; expected R3:01FE
+ 56	    	     	;   
+ 57	    	     	;
+ 58	    	     	; testing TR - always true
+ 59	1024	525A	    cex     ls,$3,$2
+ 60	1026	67FC	    movl    V1,R4; instruction to get r4=00FF if true
+ 61	1028	4024	    add     R4,R4; instruction to get r4=01FE if true
+ 62	102A	4024	    add     R4,R4; instruction to get r4=03FE if true
+ 63	102C	67FC	    movl    V1,R4; instruction to get r4=00FF if false
+ 64	102E	7FFC	    movh    V1,R4; instruction to get r4=FFFF if false
+ 65	    	     	; expected R4:03FE
+ 66	    	     	;
+ 67	    	     	;
+ 68	    	     	;
+ 69	    	     	end MAIN
+Successful completion of assembly - 1P
+
+** Symbol table **
+
+Constants (Equates)
+Name                               	Type	Value	Decimal
+
+Labels (Code)
+Name                               	Type	Value	Decimal
+MAIN                               	REL	1000	4096	PRI
+
+Labels (Data)
+Name                               	Type	Value	Decimal
+V1                                 	REL	FFFF	-1	PRI
+
+Registers
+Name                               	Type	Value	Decimal
+R7                                 	REG	0007	7	PRI
+R6                                 	REG	0006	6	PRI
+R5                                 	REG	0005	5	PRI
+R4                                 	REG	0004	4	PRI
+R3                                 	REG	0003	3	PRI
+R2                                 	REG	0002	2	PRI
+R1                                 	REG	0001	1	PRI
+R0                                 	REG	0000	0	PRI
+
+.XME file: \\Mac\Home\Desktop\Computer Architecture\Assembler\CEXtest.xme
+

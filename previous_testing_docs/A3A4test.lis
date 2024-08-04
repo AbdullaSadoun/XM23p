@@ -88,8 +88,8 @@ Time of assembly: Wed 17 Jul 2024 17:00:08
  64	    	     	; Stack has Output address and char to output
  65	    	     	;
  66	    	     	WriteSubr
- 67	0122	8030		ldr	SP,$0,R0	; R0 <- Addr of output string
- 68	0124	8132		ldr	SP,$+2,R2	; R2 <- Character to output
+ 67	0122	8030		ldr	SP,$0,R0	; R0 <- Addr of output string SP=R6=fefc
+ 68	0124	8132		ldr	SP,$+2,R2	; R2 <- Character to output SP=R6=fefc, sp+off=fefe
  69	    	     	;
  70	0126	5C50		st.b	R2,R0
  71	    	     	;

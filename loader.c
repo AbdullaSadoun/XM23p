@@ -55,13 +55,13 @@ this function is called to process the s-records
         else if (line[1] == '1') { // S1 record processing
             for (int i = 0; i < dataLength; i += ASCII_SIZE) {
                 sscanf(line + HEADER_START + i, "%4x", &data);
-                IMEM[(address >> MEM_SHIFT) + (i >> BYTE_SIZE)] = (data >> MEM_SHIFT) | ((data & BYTE_MASK) << DATA_SHIFT); // Correctly handle high and low byte
+                IMEM[(address >> MEM_SHIFT) + (i >> BYTE_SIZE)] = (data >> DATA_SHIFT) | ((data & BYTE_MASK) << DATA_SHIFT); // Correctly handle high and low byte
             }
         }
         else if (line[1] == '2') { // S2 record processing
             for (int i = 0; i < dataLength; i += ASCII_SIZE) {
                 sscanf(line + HEADER_START + i, "%4x", &data);
-                DMEM[(address >> MEM_SHIFT) + (i >> BYTE_SIZE)] = (data >> MEM_SHIFT) | ((data & BYTE_MASK) << DATA_SHIFT); // Correctly handle high and low byte
+                DMEM[(address >> MEM_SHIFT) + (i >> BYTE_SIZE)] = (data >> DATA_SHIFT) | ((data & BYTE_MASK) << DATA_SHIFT); // Correctly handle high and low byte
             }
         }
         else if (line[1] == '9') { // S9 record processing
@@ -70,7 +70,7 @@ this function is called to process the s-records
             RegistersValue[PC] = address; // set PC to starting address
         }
     }
-    
+
     fclose(file);
 }
 
