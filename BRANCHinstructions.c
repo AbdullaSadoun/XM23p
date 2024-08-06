@@ -35,12 +35,12 @@ function to execute the beq/bz instruction
 void bnebnz(){
 /*
 function to execute the bne/bnz instruction
-- it checks if the zero flag is not set
+- it checks if the zero flag is cleared (=0)
 - it increments the PC by the offset if the zero flag is not set
 */
     if(PSW.z == FALSE){
             RegistersValue[PC] = RegistersValue[PC] + offsetbuff; // increment the PC by offset
-        }
+    }
     return;
 }
 

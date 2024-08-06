@@ -14,6 +14,8 @@ int main(int argc, char* argv[]){
 
     char choice, memchoice, filename[MAX_FILENAME_LEN]; // char to temporarily store choice of the user
 
+    int firststep=0;
+
     // initializing CPU
     InitializeCPU(); // makes both mem.=0, all registers=0
 
@@ -56,6 +58,10 @@ int main(int argc, char* argv[]){
 
         case 'b': // user chooses to add a breakpoint
             add_breakpoint(); // adds a breakpoint
+            break;
+
+        case 'x': // user chooses to step x times
+            step_x_times(); // runs x times
             break;
         
         case '1': // user chooses to run in debugging mode

@@ -112,7 +112,8 @@ void updatePSW(unsigned int src, unsigned int dst,
 /* function to run instructions (fetch.c) */
 void run(); // process one instruction
 void step(); // step function
-void cex_enabled(int instructionnumber); // handle executions accordingly
+void step_x_times(); // step x times
+// void cex_enabled(int instructionnumber); // handle executions accordingly
 
 /* function to get instruction from imem (fetch.c) */
 void fetch(); // fetches one instruction
@@ -205,6 +206,7 @@ void bra(); // bra instruction's execution implementation
 int cex_condition; // cex true in effect flag
 unsigned short TC, FC; // true and false counters
 void cex(); // conditional execution function
+void cex_enabled(int instructionnumber); // handle executions accordingly
 
 /* debugger.c funcitons and variables */
 extern unsigned short BreakpointValue; // breakpoint in decimal

@@ -111,14 +111,27 @@ function to execute the cmp instruction
 - it updates the PSW flags
 */
     unsigned short Temp_Destination;
-    if(wbbuff == WORD){ // word comparison
-        Temp_Destination = RegistersValue[dstbuff] + ~RegistersValue[srcbuff] + 1;
-    } else { // byte comparison
-        unsigned short srcLowByte = RegistersValue[srcbuff] & 0x00FF;
-        unsigned short dstLowByte = RegistersValue[dstbuff] & 0x00FF;
-        Temp_Destination = dstLowByte + ~srcLowByte + 1;
+    if(rcbuff == SET){ // constant in src comparison
+        unsigned short constantmask = handleConstant(srcbuff);
+        if(wbbuff == WORD){ // word comparison
+            Temp_Destination = RegistersValue[dstbuff] + ~constantmask + 1;
+        } else { // byte comparison
+            unsigned short srcLowByte = constantmask & 0x00FF;
+            unsigned short dstLowByte = RegistersValue[dstbuff] & 0x00FF;
+            Temp_Destination = dstLowByte + ~srcLowByte + 1;
+        }
+        updatePSW(constantmask, RegistersValue[dstbuff], Temp_Destination, wbbuff);
+
+    } else { // register in src comparison
+        if(wbbuff == WORD){ // word comparison
+            Temp_Destination = RegistersValue[dstbuff] + ~RegistersValue[srcbuff] + 1;
+        } else { // byte comparison
+            unsigned short srcLowByte = RegistersValue[srcbuff] & 0x00FF;
+            unsigned short dstLowByte = RegistersValue[dstbuff] & 0x00FF;
+            Temp_Destination = dstLowByte + ~srcLowByte + 1;
+        }
+        updatePSW(RegistersValue[srcbuff], RegistersValue[dstbuff], Temp_Destination, wbbuff);
     }
-    updatePSW(RegistersValue[srcbuff], RegistersValue[dstbuff], Temp_Destination, wbbuff);
     return;
 }
 

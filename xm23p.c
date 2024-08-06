@@ -62,6 +62,7 @@ function to print out the main menu options
     printf("r - run (normal)\n");
     printf("s - step (normal)\n");
     printf("b - breakpoint\n");
+    printf("x - step x times\n");
     printf("1- run (debug)\n");
     printf("2- step (debug)\n");
     printf("3- view time count\n");

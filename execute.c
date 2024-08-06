@@ -20,7 +20,7 @@ function to execute the instruction
 */
     unsigned short Temp_Destination, Temp_src_buffer; // temporary destination variable for swapping/replacing etc.
 
-    if(instructionnumber >= ADD && instructionnumber <= BIS && rcbuff == SET){
+    if(instructionnumber >= ADD && instructionnumber <= BIS && rcbuff == SET && instructionnumber != CMP){ // Constant is taken from the register
         Temp_src_buffer = RegistersValue[srcbuff]; // set the source buffer to the temporary source buffer
         RegistersValue[srcbuff] = handleConstant(srcbuff); // handle the constant value
     }
@@ -234,7 +234,7 @@ function to execute the instruction
         break;
     }
 
-    if(instructionnumber >= ADD && instructionnumber <= BIS && rcbuff == SET){ // Constant is taken from the register
+    if(instructionnumber >= ADD && instructionnumber <= BIS && rcbuff == SET && instructionnumber != CMP){ // Constant is taken from the register
         RegistersValue[srcbuff] = Temp_src_buffer; // set the source buffer to the temporary source buffer after constant was used
     }
 
