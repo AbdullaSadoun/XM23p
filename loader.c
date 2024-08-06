@@ -121,6 +121,12 @@ function is called to print either IMEM or DMEM
 }
 
 unsigned int calculateChecksum(const char* line, int count, int dataLength) {
+/*
+* function to calculate the checksum of the s-record
+* - it adds the size and address bytes
+* - it adds the data bytes
+* - it returns the checksum
+*/
     unsigned int checksum = 0;
     int i;
 
@@ -139,3 +145,4 @@ unsigned int calculateChecksum(const char* line, int count, int dataLength) {
     checksum = (~checksum) & 0xFF; // check if the checksum is valid
     return checksum;
 }
+

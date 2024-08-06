@@ -13,7 +13,7 @@
 
 unsigned short timecounter; // time counter
 
-void process_instruction(){
+void run(){
 /*
 function to process the instruction
 - it fetches the instruction
@@ -73,9 +73,9 @@ function to step through the instructions
 
         int instructionnumber = decode();
 
-        if ((fcountbuff == CLEAR) && (tcountbuff == CLEAR)) { // CEX disabled
-            execute(instructionnumber); // executes current instruction. 
-        } else { // CEX enabled
+         if (((TC == 0) && (FC == 0)) || instructionnumber == CEX) { // CEX disabled
+			execute(instructionnumber); // executes current instruction. (CEX off)
+		} else { // CEX enabled
             cex_enabled(instructionnumber); // handle executions accordingly
         }
 
@@ -84,6 +84,7 @@ function to step through the instructions
     
 }
 
+/*
 void cex_enabled(int instructionnumber) {
 /*
 * function to handle the CEX effect
@@ -91,20 +92,7 @@ void cex_enabled(int instructionnumber) {
 * - it will skip the instruction if the CEX condition is FALSE
 * - it will decrement the True counter if the instruction is executed
 * - it will decrement the False counter if the instruction is skipped
-*/
-    // if (cex_condition == TRUE) {
-    //     execute(instructionnumber); // executes current instruction.
-    //     TC--;               // Decrement True counter
-    //     if (TC == 0) {
-    //         cex_condition = FALSE;  // set CEX condition to False
-    //     }
-    // } else { // cex_condition = FALSE;
-    //     printf("CEX skip\n");
-    //     FC--;               // Decrement False counter
-    //     if (FC == 0) {
-    //         cex_condition = TRUE;   // Set CEX condition to True
-    //     }
-    // }
+*
     if (cex_condition == TRUE) {
         if(TC > 0){ // check if there are any trues left
             execute(instructionnumber); // executes trues
@@ -124,3 +112,4 @@ void cex_enabled(int instructionnumber) {
     }
     return;
 }
+*/

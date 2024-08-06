@@ -8,604 +8,225 @@
  */
 #include "xm23p.h"
 
-#define PRE 1
-#define POST 0
-
-#define WORD 0
-#define BYTE 1
-
-#define SET 1
-
-void updatePSW(unsigned int src, unsigned int dst, unsigned int tempResult, int wbbuff){
-/*
-function to update the PSW flags
-- it updates the PSW flags based on the result of the operation
-- it updates the Zero (Z) flag
-- it updates the Negative (N) flag
-- it updates the Carry (C) flag
-- it updates the Overflow (V) flag
-*/
-    // Clear the PSW flags
-     PSW.z = CLEAR;
-     PSW.n = CLEAR;
-     PSW.c = CLEAR;
-     PSW.v = CLEAR;// check if this should be cleared too
-     
-     // Check if the operation was on a byte or word
-     int mask = (wbbuff == WORD) ? 0xFFFF : 0xFF;
-
-    // Update the Zero (Z) flag
-     if ((tempResult & mask) == CLEAR) {
-          PSW.z = SET;
-    }
-
-     // Update the Negative (N) flag
-    if ((tempResult & (mask + SET) >> SET) != CLEAR) {
-        PSW.n = SET;
-    }
-
-    // Update the Carry (C) flag - In the context of CMP, carry flag is set if src < dst
-    if (src < dst) {
-        PSW.c = SET;
-    }
-    
-}
 
 void execute(int instructionnumber){ // execute function
 /*
 function to execute the instruction
-- it executes the instruction based on the internal instruction number
+- it calls appropriate function to execute the instruction based on 
+    the internal instruction number
 - it updates the registers and PSW flags
 - it updates the HexString and Binary files for the registers
 - it prints out the execution details
 */
     unsigned short Temp_Destination, Temp_src_buffer; // temporary destination variable for swapping/replacing etc.
+
     if(instructionnumber >= ADD && instructionnumber <= BIS && rcbuff == SET){
         Temp_src_buffer = RegistersValue[srcbuff]; // set the source buffer to the temporary source buffer
-
-        switch(srcbuff){
-            case R0:
-                RegistersValue[srcbuff] = 0;
-            break;
-            case R1:
-                RegistersValue[srcbuff] = 1;
-            break;
-            case R2:
-                RegistersValue[srcbuff] = 2;
-            break;
-            case R3:
-                RegistersValue[srcbuff] = 4;
-            break;
-            case R4:
-                RegistersValue[srcbuff] = 8;
-            break;
-            case R5:
-                RegistersValue[srcbuff] = 16;
-            break;
-            case R6:
-                RegistersValue[srcbuff] = 32;
-            break;
-            case R7:
-                RegistersValue[srcbuff] = -1;
-            break;
-            default:
-                printf("Error: Invalid register/constant value\n");
-            break;
-        }
-        
+        RegistersValue[srcbuff] = handleConstant(srcbuff); // handle the constant value
     }
 
     switch(instructionnumber) { // opcode cases
-    case BL:
+    case BL: // branch and link
         printf("BL: offset:%d\n", offsetbuff); // debug printf
-        RegistersValue[LR] = RegistersValue[PC]; // make the link register equal to the PC
-        RegistersValue[PC] = RegistersValue[PC] + offsetbuff; // increment the PC by offset
+        bl(); // 
         break;
         
     case BEQBZ: // Branch if equal
         printf("BEQ/BZ: offset:%d\n", offsetbuff); // debug printf
-        if(PSW.z == TRUE){
-            RegistersValue[PC] = RegistersValue[PC] + offsetbuff; // increment the PC by offset
-        }
+        beqbz();
         break;
 
     case BNEBNZ: // Branch if not equal
         printf("BNE/BNZ: offset:%d\n", offsetbuff); // debug printf
-        
-        if(PSW.z == FALSE){
-            RegistersValue[PC] = RegistersValue[PC] + offsetbuff; // increment the PC by offset
-        }
+        bnebnz();
         break;
 
     case BCBHS: // Branch if carry
         printf("BC/BHS: offset:%d\n", offsetbuff); // debug printf
-        if(PSW.c == TRUE){
-            RegistersValue[PC] = RegistersValue[PC] + offsetbuff; // increment the PC by offset
-        }
+        bcbhs();
         break;
 
     case BNCBLO:  // Branch if not carry
         printf("BNV/BLO: offset:%d\n", offsetbuff); // debug printf
-        if(PSW.c == FALSE){
-            RegistersValue[PC] = RegistersValue[PC] + offsetbuff; // increment the PC by offset
-        }
+        bncblo();
         break;
 
     case BN: // Branch if negative
         printf("BN: offset:%d\n", offsetbuff); // debug printf
-        if(PSW.n == TRUE){
-            RegistersValue[PC] = RegistersValue[PC] + offsetbuff; // increment the PC by offset
-        }
+        bn();
         break;
 
     case BGE: // Branch if greater than or equal
         printf("BGE: offset:%d\n", offsetbuff); // debug printf
-        if(PSW.n == PSW.v){
-            RegistersValue[PC] = RegistersValue[PC] + offsetbuff; // increment the PC by offset
-        }
+        bge();
         break;
 
     case BLT: // Branch if less than
         printf("BLT: offset:%d\n", offsetbuff); // debug printf
-        if(PSW.n != PSW.v){
-            RegistersValue[PC] = RegistersValue[PC] + offsetbuff; // increment the PC by offset
-        }
+        blt();
         break;
 
-    case BRA:
+    case BRA: // Branch always
         printf("BRA: offset:%d\n", offsetbuff); // debug printf
-        RegistersValue[PC] = RegistersValue[PC] + offsetbuff; // increment the PC by offset
+        bra();
         break;
-
-    case ADD: // DST = DST + SRC/CON
+    
+    case ADD: // add registers
         printf("ADD: RC=%d, WB=%d, SRC=%d, DST=%d\n", rcbuff, wbbuff, srcbuff, dstbuff); // debug printf); // debug printf
-        if(wbbuff == WORD){ // word addition
-            RegistersValue[dstbuff] = RegistersValue[srcbuff] + RegistersValue[dstbuff]; // adding words
-        } else { // byte addition
-        unsigned short srcLowByte = RegistersValue[srcbuff] & 0x00FF;
-        unsigned short dstLowByte = RegistersValue[dstbuff] & 0x00FF;
-        unsigned short result = srcLowByte + dstLowByte; // adding bytes
-        RegistersValue[dstbuff] = (RegistersValue[dstbuff] & 0xFF00) | (result & 0x00FF);
-        }
-        // update PSW flags
-        updatePSW(RegistersValue[srcbuff], RegistersValue[dstbuff], RegistersValue[dstbuff], wbbuff);
+        add(); //  DST = DST + SRC/CON
         break;
 
-    case ADDC: // DST = DST + (SRC/CON + Carry)
+    case ADDC: // add registers with carry
         printf("ADDC: RC=%d, WB=%d, SRC=%d, DST=%d\n", rcbuff, wbbuff, srcbuff, dstbuff); // debug printf); // debug printf
-        if(wbbuff == WORD){ // word addition
-            RegistersValue[dstbuff] = RegistersValue[srcbuff] + RegistersValue[dstbuff] + PSW.c; // adding words and carry
-        } else { // byte addition
-        unsigned short srcLowByte = RegistersValue[srcbuff] & 0x00FF;
-        unsigned short dstLowByte = RegistersValue[dstbuff] & 0x00FF;
-        unsigned short result = srcLowByte + dstLowByte + PSW.c; // make sure to debug from here if anything goes wrong
-        RegistersValue[dstbuff] = (RegistersValue[dstbuff] & 0xFF00) | (result & 0x00FF);
-        }
+        addc(); // DST = DST + (SRC/CON + Carry)
         break;
 
-    case SUB: // DST = DST + (-SRC/CON+1)
+    case SUB: // subtract registers
         printf("SUB: RC=%d, WB=%d, SRC=%d, DST=%d\n", rcbuff, wbbuff, srcbuff, dstbuff); // debug printf
-        if(wbbuff == WORD){ // word subtraction
-            RegistersValue[dstbuff] = RegistersValue[dstbuff] + (~RegistersValue[srcbuff]+1);
-        } else { // byte subtraction
-        unsigned short srcLowByte = RegistersValue[srcbuff] & 0x00FF;
-        unsigned short dstLowByte = RegistersValue[dstbuff] & 0x00FF;
-        unsigned short result = dstLowByte + (srcLowByte + 1);
-        RegistersValue[dstbuff] = (RegistersValue[dstbuff] & 0xFF00) | (result & 0x00FF);
-        }
+        sub(); // DST = DST + (-SRC/CON + 1)
         break;
 
-    case SUBC: // DST = DST + (-SRC/CON + Carry)
+    case SUBC: // subtract registers with carry
         printf("SUBC: RC=%d, WB=%d, SRC=%d, DST=%d\n", rcbuff, wbbuff, srcbuff, dstbuff); // debug printf
-        if(wbbuff == WORD){ // word subtraction
-             RegistersValue[dstbuff] = RegistersValue[dstbuff] + (~RegistersValue[srcbuff] + PSW.c);
-        } else { // byte subtraction
-        unsigned short srcLowByte = RegistersValue[srcbuff] & 0x00FF;
-        unsigned short dstLowByte = RegistersValue[dstbuff] & 0x00FF;
-        unsigned short result = dstLowByte + (srcLowByte + PSW.c);
-        RegistersValue[dstbuff] = (RegistersValue[dstbuff] & 0xFF00) | (result & 0x00FF);
-        }
+        subc(); // DST = DST + (-SRC/CON + 1 + Carry)
         break;
 
-    case DADD:
+    case DADD: // add registers (decimals)
         printf("DADD: RC=%d, WB=%d, SRC=%d, DST=%d\n", rcbuff, wbbuff, srcbuff, dstbuff); // debug printf
-        if(wbbuff == WORD){ // word addition
-            RegistersValue[dstbuff] = RegistersValue[srcbuff] + RegistersValue[dstbuff] + PSW.c; // adding words and carry
-        } else { // byte addition
-        unsigned short srcLowByte = RegistersValue[srcbuff] & 0x00FF;
-        unsigned short dstLowByte = RegistersValue[dstbuff] & 0x00FF;
-        unsigned short result = srcLowByte + dstLowByte + PSW.c; // make sure to debug from here if anything goes wrong
-        RegistersValue[dstbuff] = (RegistersValue[dstbuff] & 0xFF00) | (result & 0x00FF);
-        }
-        ChangedRegistersValue(RegistersValue[dstbuff], dstbuff);
+        dadd(); // DST = DST + SRC/CON
         break;
 
-    case CMP:
+    case CMP: // compare registers
         printf("CMP: RC=%d, WB=%d, SRC=%d, DST=%d\n", rcbuff, wbbuff, srcbuff, dstbuff); // debug printf
-        if(wbbuff == WORD){ // word comparison
-            Temp_Destination = RegistersValue[dstbuff] + ~RegistersValue[srcbuff] + 1;
-        } else { // byte comparison
-            unsigned short srcLowByte = RegistersValue[srcbuff] & 0x00FF;
-            unsigned short dstLowByte = RegistersValue[dstbuff] & 0x00FF;
-            Temp_Destination = dstLowByte + ~srcLowByte + 1;
-        }
-        updatePSW(RegistersValue[srcbuff], RegistersValue[dstbuff], Temp_Destination, wbbuff);
+        cmp(); // DST - SRC/CON
         break;
 
-    case XOR:
+    case XOR: // exclusive OR registers
         printf("XOR: RC=%d, WB=%d, SRC=%d, DST=%d\n", rcbuff, wbbuff, srcbuff, dstbuff); // debug printf
-        if (wbbuff == WORD) { // If operation is word-wide
-            RegistersValue[dstbuff] ^= RegistersValue[srcbuff];
-        } else { // If operation is byte-wide
-            unsigned short srcLowByte = RegistersValue[srcbuff] & 0x00FF;
-            unsigned short dstLowByte = RegistersValue[dstbuff] & 0x00FF;
-            unsigned short result = srcLowByte ^ dstLowByte; // XOR operation on the low bytes
-            RegistersValue[dstbuff] = (RegistersValue[dstbuff] & 0xFF00) | (result & 0x00FF);
-        }
-        updatePSW(RegistersValue[srcbuff], RegistersValue[dstbuff], RegistersValue[dstbuff], wbbuff);
+        xor(); // DST = DST ^ SRC/CON
         break;
 
-    case AND:
+    case AND: // AND registers
         printf("AND: RC=%d, WB=%d, SRC=%d, DST=%d\n", rcbuff, wbbuff, srcbuff, dstbuff); // debug printf
-        if (wbbuff == WORD) { // If operation is word-wide
-            RegistersValue[dstbuff] &= RegistersValue[srcbuff];
-        } else { // If operation is byte-wide
-            unsigned short srcLowByte = RegistersValue[srcbuff] & 0x00FF;
-            unsigned short dstLowByte = RegistersValue[dstbuff] & 0x00FF;
-            unsigned short result = srcLowByte & dstLowByte; // AND operation on the low bytes
-            RegistersValue[dstbuff] = (RegistersValue[dstbuff] & 0xFF00) | (result & 0x00FF);
-        }
-        updatePSW(RegistersValue[srcbuff], RegistersValue[dstbuff], RegistersValue[dstbuff], wbbuff);
+        and(); // DST = DST & SRC/CON
         break;
 
-    case OR:
+    case OR: // OR registers
         printf("OR: RC=%d, WB=%d, SRC=%d, DST=%d\n", rcbuff, wbbuff, srcbuff, dstbuff); // debug printf
-        if (wbbuff == WORD) { // If operation is word-wide
-            RegistersValue[dstbuff] |= RegistersValue[srcbuff];
-        } else { // If operation is byte-wide
-            unsigned short srcLowByte = RegistersValue[srcbuff] & 0x00FF;
-            unsigned short dstLowByte = RegistersValue[dstbuff] & 0x00FF;
-            unsigned short result = srcLowByte | dstLowByte; // OR operation on the low bytes
-            RegistersValue[dstbuff] = (RegistersValue[dstbuff] & 0xFF00) | (result & 0x00FF);
-        }
-        updatePSW(RegistersValue[srcbuff], RegistersValue[dstbuff], RegistersValue[dstbuff], wbbuff);
+        or(); // DST = DST | SRC/CON
         break;
 
-    case BIT:
+    case BIT: // BIT test
         printf("BIT: RC=%d, WB=%d, SRC=%d, DST=%d\n", rcbuff, wbbuff, srcbuff, dstbuff); // debug printf
-        //unsigned short Temp_Destination;
-        if (wbbuff == WORD) { // If operation is word-wide
-            Temp_Destination = RegistersValue[dstbuff] & (1 << RegistersValue[srcbuff]);
-        } else { // If operation is byte-wide
-            Temp_Destination = (RegistersValue[dstbuff] & 0x00FF) & (1 << (RegistersValue[srcbuff] & 0x00FF));
-        }
-        printf("R/C: %d\nW/B: %d\nSource: %hhx\nDestination: %hhx\n", 
-            rcbuff, wbbuff, RegistersValue[srcbuff], RegistersValue[dstbuff]);
-        updatePSW(RegistersValue[srcbuff], RegistersValue[dstbuff], Temp_Destination, wbbuff);
+        bit(); // DST & SRC/CON
         break;
 
-    case BIC:
+    case BIC: // bit clear
         printf("BIC: RC=%d, WB=%d, SRC=%d, DST=%d\n", rcbuff, wbbuff, srcbuff, dstbuff); // debug printf
-        if (wbbuff == WORD) { // If operation is word-wide
-            RegistersValue[dstbuff] &= ~(1 << RegistersValue[srcbuff]);
-        } else { // If operation is byte-wide
-            RegistersValue[dstbuff] &= ~(1 << (RegistersValue[srcbuff] & 0x00FF));
-        }
-        updatePSW(RegistersValue[srcbuff], RegistersValue[dstbuff], RegistersValue[dstbuff], wbbuff);
-        ChangedRegistersValue(RegistersValue[dstbuff], dstbuff);
+        bic(); // DST = DST & ~(SRC/CON)
         break;
 
-    case BIS: // DST = DST | (1 << SRC/CON)
+    case BIS: // bit set
         printf("BIS: RC=%d, WB=%d, SRC=%d, DST=%d\n", rcbuff, wbbuff, srcbuff, dstbuff); // debug printf
-        if (wbbuff == WORD) { // If operation is word-wide
-            RegistersValue[dstbuff] |= (1 << RegistersValue[srcbuff]);
-        } else { // If operation is byte-wide
-            RegistersValue[dstbuff] |= (1 << (RegistersValue[srcbuff] & 0x00FF));
-        }
-        updatePSW(RegistersValue[srcbuff], RegistersValue[dstbuff], RegistersValue[dstbuff], wbbuff);
-        ChangedRegistersValue(RegistersValue[dstbuff], dstbuff);
+        bis(); // DST = DST | (1 << SRC/CON)
         break;
 
-    case MOV:
+    case MOV: // move registers
         printf("MOV: WB=%d, SRC=%d, DST=%d\n", wbbuff, srcbuff, dstbuff); // debug printf (no need for r/c)
-        if (wbbuff == WORD) { // If operation is word-wide
-            RegistersValue[dstbuff] = RegistersValue[srcbuff];
-        } else { // If operation is byte-wide
-            // Clear the destination's low byte and set it to the source's low byte
-            RegistersValue[dstbuff] = (RegistersValue[dstbuff] & 0xFF00) | (RegistersValue[srcbuff] & 0x00FF);
-        }
-        updatePSW(RegistersValue[srcbuff], RegistersValue[dstbuff], RegistersValue[dstbuff], wbbuff);
-        ChangedRegistersValue(RegistersValue[dstbuff], dstbuff);
+        mov(); // DST = SRC/CON
         break;
 
-    case SWAP:
+    case SWAP: // swap registers
         printf("SWAP: SRC=%d, DST=%d\n", srcbuff, dstbuff); // debug printf
-        unsigned short temp_reg = RegistersValue[dstbuff];
-        RegistersValue[dstbuff] = RegistersValue[srcbuff];
-        RegistersValue[srcbuff] = temp_reg;
-        updatePSW(RegistersValue[srcbuff], RegistersValue[dstbuff], 0, wbbuff); // Assuming PSW needs to be updated, adjust as necessary
-        ChangedRegistersValue(RegistersValue[dstbuff], dstbuff);
-        ChangedRegistersValue(RegistersValue[srcbuff], srcbuff);
+        swap(); // DST = SRC
         break;
 
-    case SRA:
+    case SRA: // shift right arithmetic
         printf("SRA: WB=%d, DST=%d\n", wbbuff, dstbuff);
-        if (wbbuff == WORD) { // Word operation
-            unsigned short msb = RegistersValue[dstbuff] & 0x8000; // Extract MSB (bit 15)
-            RegistersValue[dstbuff] >>= 1; // Logical shift right by 1
-            RegistersValue[dstbuff] |= msb; // Preserve MSB (sign bit for arithmetic shift)
-        } else {
-            // Byte operation
-            unsigned char msb = RegistersValue[dstbuff] & 0x80; // Extract MSB (bit 7) of the low byte
-            RegistersValue[dstbuff] = (RegistersValue[dstbuff] & 0xFF00) | ((RegistersValue[dstbuff] & 0x00FF) >> 1); // Logical shift right the low byte by 1
-            RegistersValue[dstbuff] |= msb; // Preserve MSB (sign bit for arithmetic shift) in the low byte
-        }
+        sra(); // DST = DST >> 1
         break;
 
-    case RRC:
+    case RRC: // rotate right through carry
         printf("RRC: WB=%d, DST=%d\n", wbbuff, dstbuff);
-        unsigned short oldLSB;
-        if (wbbuff == WORD) {
-            // Word operation
-            oldLSB = RegistersValue[dstbuff] & 0x0001; // Extract old LSB
-            RegistersValue[dstbuff] >>= 1; // Shift right
-            if (PSW.c) { // If carry is set
-                RegistersValue[dstbuff] |= 0x8000; // Put carry into MSB
-            }
-            PSW.c = oldLSB; // Update carry with old LSB
-        } else {
-            // Byte operation
-            oldLSB = RegistersValue[dstbuff] & 0x01; // Extract old LSB of the low byte
-            RegistersValue[dstbuff] = (RegistersValue[dstbuff] & 0xFF00) | ((RegistersValue[dstbuff] & 0x00FF) >> 1); // Shift right the low byte
-            if (PSW.c) { // If carry is set
-                RegistersValue[dstbuff] |= 0x80; // Put carry into MSB of the low byte
-            }
-            PSW.c = oldLSB; // Update carry with old LSB
-        }
+        rrc(); // DST = DST >> 1 + Carry
         break;
 
-    case SWPB:
-        RegistersValue[dstbuff] = ((RegistersValue[dstbuff] & 0x00FF) << 8) | ((RegistersValue[dstbuff] & 0xFF00) >> 8); // Swap the high byte and low byte
-        ChangedRegistersValue(RegistersValue[dstbuff], dstbuff); // updates the register's HexString/binary files
+    case SWPB: // swap bytes
         printf("SWPB: DST=%d Result: %04X\n", dstbuff, RegistersValue[dstbuff]);
-        //printf("Result: %04X\n", RegistersValue[dstbuff]);
+        swpb(); // DST = ((DST & 0xFF) << 8) | ((DST >> 8) & 0xFF)
         break;
 
-    case SXT: // keep implementing until here.
-        if (RegistersValue[dstbuff] & 0x0080) { // If bit 7 of the low byte is 1
-            RegistersValue[dstbuff] |= 0xFF00; // Set bits 8-15 to 1 for sign extension
-        } else {
-            RegistersValue[dstbuff] &= 0x00FF; // Keep bits 8-15 as 0
-        }
-        ChangedRegistersValue(RegistersValue[dstbuff], dstbuff); // updates the register's HexString/binary files
+    case SXT: // sign extend
+        sxt(); // DST = (DST & 0x80) ? 0xFF00 | DST : DST
         printf("SXT: DST=%d Result: %04X\n", dstbuff, RegistersValue[dstbuff]);
         break;
 
-    case SETPRI:
+    case SETPRI: // not yet implemented
         printf("SETPRI: \n");
         break;
 
-    case SVC:
+    case SVC: // not yet implemented
         printf("SVC: \n");
         break;
 
-    case SETCC:
+    case SETCC: // set psw flags
         printf("SETCC: \n");
-        if (vbuff == TRUE) PSW.v = TRUE;
-        if (nbuff == TRUE) PSW.n = TRUE;
-        if (zbuff == TRUE) PSW.z = TRUE;
-        if (cbuff == TRUE) PSW.c = TRUE;
+        setcc(); // set the PSW flags
         break;
 
-    case CLRCC:
+    case CLRCC: // clear psw flags
         printf("CLRCC: \n");
-        if (vbuff == TRUE) PSW.v = FALSE;
-        if (nbuff == TRUE) PSW.n = FALSE;
-        if (zbuff == TRUE) PSW.z = FALSE;
-        if (cbuff == TRUE) PSW.c = FALSE;
+        clrcc(); // clear the PSW flags
         break;
 
-    case CEX:
-        printf("CEX: ");
-        
-        // inspect the psw based on condition prefix
-        switch (condition_prefix_buff) {
-            case EQ:  // Equal / Zero
-                cex_condition = (PSW.z == SET) ? TRUE : FALSE;  // Z flag is set
-                break;
-            case NE:  // Not Equal
-                cex_condition = (PSW.z == CLEAR) ? TRUE : FALSE;  // Z flag is clear
-                break;
-            case CSHS:  // Carry Set / Unsigned Higher or Same
-                cex_condition = (PSW.c == SET) ? TRUE : FALSE;  // C flag is set
-                break;
-            case CCLO:  // Carry Clear / Unsigned Lower
-                cex_condition = (PSW.c == CLEAR) ? TRUE : FALSE;  // C flag is clear
-                break;
-            case MI:  // Minus / Negative
-                cex_condition = (PSW.n == SET) ? TRUE : FALSE;  // N flag is set
-                break;
-            case PL:  // Plus / Positive or Zero
-                cex_condition = (PSW.n == CLEAR) ? TRUE : FALSE;  // N flag is clear
-                break;
-            case VS:  // Overflow Set
-                cex_condition = (PSW.v == SET) ? TRUE : FALSE;  // V flag is set
-                break;
-            case VC:  // No Overflow
-                cex_condition = (PSW.v == CLEAR) ? TRUE : FALSE;  // V flag is clear
-                break;
-            case HI:  // Unsigned Higher
-                cex_condition = (PSW.c == SET && PSW.z == CLEAR) ? TRUE : FALSE;  // C set and Z clear
-                break;
-            case LS:  // Unsigned Lower or Same
-                cex_condition = (PSW.c == CLEAR || PSW.z == SET) ? TRUE : FALSE;  // C clear or Z set
-                break;
-            case GE:  // Greater or Equal (Signed)
-                cex_condition = (PSW.n == PSW.v) ? TRUE : FALSE;  // N equal to V
-                break;
-            case LT:  // Less Than (Signed)
-                cex_condition = (PSW.n != PSW.v) ? TRUE : FALSE;  // N not equal to V
-                break;
-            case GT:  // Greater Than (Signed)
-                cex_condition = (PSW.z == CLEAR && PSW.n == PSW.v) ? TRUE : FALSE;  // Z clear and N equal to V
-                break;
-            case LE:  // Less Than or Equal (Signed)
-                cex_condition = (PSW.z == SET || PSW.n != PSW.v) ? TRUE : FALSE;  // Z set or N not equal to V
-                break;
-            case TR:  // Always True
-                cex_condition = TRUE;  // Always execute
-                break;
-            case FL:  // Always False
-                cex_condition = FALSE;  // Never execute
-                break;
-            default:
-                printf("Error: Invalid condition prefix\n");
-                break;
-        }
-        
-        printf("Cond:%04X TC:%d FC:%d ", condition_prefix_buff, tcountbuff, fcountbuff);
+    case CEX: // conditional execution
+        cex(); // set the cex condition
+        printf("CEX: Cond:%04X TC:%d FC:%d ", condition_prefix_buff, tcountbuff, fcountbuff);
         printf("%s\n", cex_condition ? "TRUE" : "FALSE");
-
-        TC = tcountbuff;
-        FC = fcountbuff;
         break;
 
-    case LD: // DST = mem[SRC plus addressing]
+    case LD: // load content to register
         printf("LD: PRPO:%d DEC:%d INC:%d WB:%d SRC:%d DST:%d\n", prpobuff, decbuff, incbuff, wbbuff, srcbuff, dstbuff); // debug printf
-        if (prpobuff != POST) { // PRE-INC/DEC
-            if (incbuff == SET) { // PRE-INC
-                RegistersValue[srcbuff] += (wbbuff == WORD) ? 2 : 1;
-            }
-            if (decbuff == SET) { // PRE-DEC
-                RegistersValue[srcbuff] -= (wbbuff == WORD) ? 2 : 1;
-            }
-            if (wbbuff == WORD) {
-                RegistersValue[dstbuff] = DMEM[RegistersValue[srcbuff] / 2];
-            } else {
-                // Preserve the high byte of the destination register and only load the low byte from DMEM
-                unsigned short byteVal;
-                if (RegistersValue[srcbuff] % 2 == 0) {
-                    byteVal = DMEM[RegistersValue[srcbuff] / 2] & 0x00FF; // Low byte
-                } else {
-                    byteVal = (DMEM[RegistersValue[srcbuff] / 2] & 0xFF00) >> 8; // High byte
-                }
-                RegistersValue[dstbuff] = (RegistersValue[dstbuff] & 0xFF00) | byteVal;
-            }
-        } else { // POST-INC/DEC
-            if (wbbuff == WORD) {
-                RegistersValue[dstbuff] = DMEM[RegistersValue[srcbuff] / 2];
-            } else {
-                // Preserve the high byte of the destination register and only load the low byte from DMEM
-                unsigned short byteVal;
-                if (RegistersValue[srcbuff] % 2 == 0) {
-                    byteVal = DMEM[RegistersValue[srcbuff] / 2] & 0x00FF; // Low byte
-                } else {
-                    byteVal = (DMEM[RegistersValue[srcbuff] / 2] & 0xFF00) >> 8; // High byte
-                }
-                RegistersValue[dstbuff] = (RegistersValue[dstbuff] & 0xFF00) | byteVal;
-            }
-
-            if (incbuff == SET) { // POST-INC
-                RegistersValue[srcbuff] += (wbbuff == WORD) ? 2 : 1;
-            }
-            if (decbuff == SET) { // POST-DEC
-                RegistersValue[srcbuff] -= (wbbuff == WORD) ? 2 : 1;
-            }
-        }
+        ld(); // DST = DMEM[SRC plus addressing]
         break;
 
-    case ST: // store content of source register to DMEM[EA(uses destination register)]
+    case ST: // store content from register to DMEM
         printf("ST: PRPO:%d DEC:%d INC:%d WB:%d SRC:%d DST:%d\n", prpobuff, decbuff, incbuff, wbbuff, srcbuff, dstbuff); // debug printf
-        if (prpobuff != POST) { // PRE-INC/DEC
-            if (incbuff == SET) { // PRE-INC
-                RegistersValue[dstbuff] += (wbbuff == WORD) ? 2 : 1;
-            }
-            if (decbuff == SET) { // PRE-DEC
-                RegistersValue[dstbuff] -= (wbbuff == WORD) ? 2 : 1;
-            }
-            if (wbbuff == WORD) {
-                DMEM[RegistersValue[dstbuff] / 2] = RegistersValue[srcbuff]; // Store word
-            } else {
-                unsigned short wordVal = DMEM[RegistersValue[dstbuff] / 2];
-                if (RegistersValue[dstbuff] % 2 == 0) {
-                    // Store to low byte
-                    wordVal = (wordVal & 0xFF00) | (RegistersValue[srcbuff] & 0x00FF);
-                } else {
-                    // Store to high byte
-                    wordVal = (wordVal & 0x00FF) | ((RegistersValue[srcbuff] & 0x00FF) << 8);
-                }
-                DMEM[RegistersValue[dstbuff] / 2] = wordVal;
-            }
-        } else { // POST-INC/DEC
-            if (wbbuff == WORD) {
-                DMEM[RegistersValue[dstbuff] / 2] = RegistersValue[srcbuff]; // Store word
-            } else {
-                unsigned short wordVal = DMEM[RegistersValue[dstbuff] / 2];
-                if (RegistersValue[dstbuff] % 2 == 0) {
-                    // Store to low byte
-                    wordVal = (wordVal & 0xFF00) | (RegistersValue[srcbuff] & 0x00FF);
-                } else {
-                    // Store to high byte
-                    wordVal = (wordVal & 0x00FF) | ((RegistersValue[srcbuff] & 0x00FF) << 8);
-                }
-                DMEM[RegistersValue[dstbuff] / 2] = wordVal;
-            }            
-            if (incbuff == SET) { // POST-INC
-                RegistersValue[dstbuff] += (wbbuff == WORD) ? 2 : 1;
-            }
-            if (decbuff == SET) { // POST-DEC
-                RegistersValue[dstbuff] -= (wbbuff == WORD) ? 2 : 1;
-            }
-        }
+        st(); // DMEM[DST plus addressing] = SRC
         break;
 
-    case MOVL:
+    case MOVL: // move low bits
         printf("MOVL: dst:%d bits:%d\n", dstbuff, bitsbuff); // debug printf
-        RegistersValue[dstbuff] = (RegistersValue[dstbuff] & 0xFF00) | bitsbuff; // Set the low byte to bitsbuff, keep the high byte unchanged
-        ChangedRegistersValue(RegistersValue[dstbuff], dstbuff); // updates the register's HexString/binary files
+        movl(); // DST = SRC/CON
         break;
 
-    case MOVLZ:
+    case MOVLZ: // move low bits and zero rest
         printf("MOVLZ: dst:%d bits:%d\n", dstbuff, bitsbuff);
-        RegistersValue[dstbuff] = bitsbuff; // Set the low byte to bitsbuff and high byte to 0
-        ChangedRegistersValue(RegistersValue[dstbuff], dstbuff); // updates the register's HexString/binary files
+        movlz(); // DST = SRC/CON
         break;
 
-    case MOVLS:
+    case MOVLS: // move low bits and set high 
         printf("MOVLS: dst:%d bits:%d\n", dstbuff, bitsbuff);
-        RegistersValue[dstbuff] = bitsbuff | 0xFF00; // Set the low byte to bitsbuff and high byte to 0xFF
-        ChangedRegistersValue(RegistersValue[dstbuff], dstbuff); // updates the register's HexString/binary files
+        movls(); // DST = SRC/CON
         break;
 
-    case MOVH:
+    case MOVH: // move high bits
         printf("MOVH: dst:%d bits:%d\n", dstbuff, bitsbuff);
-        RegistersValue[dstbuff] = (RegistersValue[dstbuff] & 0x00FF) | (bitsbuff << 8); // Set the high byte to bitsbuff, keep the low byte unchanged
-        ChangedRegistersValue(RegistersValue[dstbuff], dstbuff); // updates the register's HexString/binary files
+        movh(); // DST = SRC/CON
         break;
 
-    case LDR: // DST = mem[SRC + sign-extended 7-bit offset]
+    case LDR: // load from memory to register with offset
         printf("LDR: offset:%d wb:%d src:%d dst:%d\n", offsetbuff, wbbuff, srcbuff, dstbuff); // debug printf
-        EA = RegistersValue[srcbuff] + (offsetbuff/2); // get the Effective address
-        //RegistersValue[srcbuff] += offsetbuff; // get the Effective address
-        if(wbbuff == WORD){
-            RegistersValue[dstbuff] = DMEM[EA/2]; // dst shouldnt change
-        } else { // BYTE
-            RegistersValue[dstbuff] = DMEM[EA/2] & 0x00FF; // dst shouldnt change
-        }
+        ldr(); // DST = mem[SRC + sign-extended 7-bit offset]
         break;
 
-    case STR: // mem[DST + sign-extended 7-bit offset] = SRC
+    case STR: // store from register to memory with offset
         printf("STR: offset:%d wb:%d src:%d dst:%d\n", offsetbuff, wbbuff, srcbuff, dstbuff); // debug printf  
-        EA = RegistersValue[dstbuff] + offsetbuff; // get the Effective address
-        if(wbbuff == WORD){
-            DMEM[EA/2] = RegistersValue[srcbuff]; // store the word
-        } else { // BYTE
-            DMEM[EA/2] = (RegistersValue[srcbuff] & 0x00FF); // dst shouldnt change
-        }
+        str(); // mem[DST + sign-extended 7-bit offset] = SRC
         break;
 
-    case Error:
-        printf("Error: \n");
+    case Error: // error
+        printf("Error: \n"); // return error message
         break;
 
     default:
@@ -623,4 +244,97 @@ function to execute the instruction
     
     return; 
 }
+
+unsigned short handleConstant(int src) {
+/*
+function to handle constant values
+- works when RC bit is set
+- returns the constant value
+- for the appropriate register no. (src)
+*/
+    switch (src) {
+        case R0: return 0;
+        case R1: return 1;
+        case R2: return 2;
+        case R3: return 4;
+        case R4: return 8;
+        case R5: return 16;
+        case R6: return 32;
+        case R7: return -1;
+        default:
+            printf("Error: Invalid register/constant value\n");
+            return 0;
+    }
+}
+
+/*
+void cex(){
+/*
+function to handle conditional execution
+- it sets the cex_condition based on the condition prefix
+- it sets the TC and FC values to know number of instructions to execute
+*
+    // enum for the cex conditions prefix cases
+    enum{EQ, NE, CSHS, CCLO, MI, PL, VS, VC, HI, LS, GE, LT, GT, LE, TR, FL}; // enum 
+    
+    // inspect the psw based on condition prefix
+    switch (condition_prefix_buff) {
+        case EQ:  // Equal / Zero
+            cex_condition = (PSW.z == SET) ? TRUE : FALSE;  // Z flag is set
+            break;
+        case NE:  // Not Equal
+            cex_condition = (PSW.z == CLEAR) ? TRUE : FALSE;  // Z flag is clear
+            break;
+        case CSHS:  // Carry Set / Unsigned Higher or Same
+            cex_condition = (PSW.c == SET) ? TRUE : FALSE;  // C flag is set
+            break;
+        case CCLO:  // Carry Clear / Unsigned Lower
+            cex_condition = (PSW.c == CLEAR) ? TRUE : FALSE;  // C flag is clear
+            break;
+        case MI:  // Minus / Negative
+            cex_condition = (PSW.n == SET) ? TRUE : FALSE;  // N flag is set
+            break;
+        case PL:  // Plus / Positive or Zero
+            cex_condition = (PSW.n == CLEAR) ? TRUE : FALSE;  // N flag is clear
+            break;
+        case VS:  // Overflow Set
+            cex_condition = (PSW.v == SET) ? TRUE : FALSE;  // V flag is set
+            break;
+        case VC:  // No Overflow
+            cex_condition = (PSW.v == CLEAR) ? TRUE : FALSE;  // V flag is clear
+            break;
+        case HI:  // Unsigned Higher
+            cex_condition = (PSW.c == SET && PSW.z == CLEAR) ? TRUE : FALSE;  // C set and Z clear
+            break;
+        case LS:  // Unsigned Lower or Same
+            cex_condition = (PSW.c == CLEAR || PSW.z == SET) ? TRUE : FALSE;  // C clear or Z set
+            break;
+        case GE:  // Greater or Equal (Signed)
+            cex_condition = (PSW.n == PSW.v) ? TRUE : FALSE;  // N equal to V
+            break;
+        case LT:  // Less Than (Signed)
+            cex_condition = (PSW.n != PSW.v) ? TRUE : FALSE;  // N not equal to V
+            break;
+        case GT:  // Greater Than (Signed)
+            cex_condition = (PSW.z == CLEAR && PSW.n == PSW.v) ? TRUE : FALSE;  // Z clear and N equal to V
+            break;
+        case LE:  // Less Than or Equal (Signed)
+            cex_condition = (PSW.z == SET || PSW.n != PSW.v) ? TRUE : FALSE;  // Z set or N not equal to V
+            break;
+        case TR:  // Always True
+            cex_condition = TRUE;  // Always execute
+            break;
+        case FL:  // Always False
+            cex_condition = FALSE;  // Never execute
+            break;
+        default:
+            printf("Error: Invalid condition prefix\n");
+            break;
+    }
+
+    TC = tcountbuff;
+    FC = fcountbuff;
+    return;
+}*/
+
 

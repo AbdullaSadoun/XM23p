@@ -48,6 +48,9 @@
 #define BYTE 1
 #define TRUE 1
 #define FALSE 0
+#define PRE 1
+#define POST 0
+
 
 
 /* Time Counter Initialization - Clock */
@@ -93,6 +96,7 @@ unsigned short RegistersValue[NUMBER_OF_REGISTERS]; // 8 registers each has 32 b
 #define BIT_NUMBER_9 9
 #define BIT_NUMBER_12 12
 
+/* PSW definitions and declarations/Prototypes */
 /* PSW Register (vnzc) */
 typedef struct { // psw register struct
     unsigned short v : SET; // overflow bit/flag
@@ -101,11 +105,17 @@ typedef struct { // psw register struct
     unsigned short c : SET; // carry bit/flag
 } PSW_Struct;
 PSW_Struct PSW; // instance of PSW register
+void updatePSW(unsigned int src, unsigned int dst, 
+    unsigned int tempResult, int wbbuff); // function to update the PSW flags
 
-/* function to process instructions (fetch.c) */
-void process_instruction(); // process one instruction
-void fetch(); // fetches one instruction
+
+/* function to run instructions (fetch.c) */
+void run(); // process one instruction
 void step(); // step function
+void cex_enabled(int instructionnumber); // handle executions accordingly
+
+/* function to get instruction from imem (fetch.c) */
+void fetch(); // fetches one instruction
 
 /* function to process instructions (decode.c) */
 unsigned short IMARValue; // to convert for shifting
@@ -135,33 +145,81 @@ enum {
     MOVLZ, MOVLS, MOVH, LDR, STR, Error
 }; // opcode cases
 void execute(int instructionnumber); // executes one instruction
+unsigned short handleConstant(int src); // function to handle constant values
+
+
+/* Register instruction's implementations: REGinstructions.c */
+//A2
+void add(); // add instruction's execution implementation
+void addc(); // addc instruction's execution implementation
+void sub(); // sub instruction's execution implementation
+void subc(); // subc instruction's execution implementation
+void dadd(); // dadd instruction's execution implementation
+void cmp(); // cmp instruction's execution implementation
+void xor(); // xor instruction's execution implementation
+void and(); // and instruction's execution implementation
+void or(); // or instruction's execution implementation
+void bit(); // bit instruction's execution implementation
+void bic(); // bic instruction's execution implementation
+void bis(); // bis instruction's execution implementation
+void mov(); // mov instruction's execution implementation
+void swap(); // swap instruction's execution implementation
+void sra(); // sra instruction's execution implementation
+void rrc(); // rrc instruction's execution implementation
+void swpb(); // swpb instruction's execution implementation
+void sxt(); // sxt instruction's execution implementation
+// lab 3
+void setcc();
+void clrcc();
+// A2
+void movl(); // movl instruction's execution implementation
+void movlz(); // movlz instruction's execution implementation
+void movls(); // movls instruction's execution implementation
+void movh(); // movh instruction's execution implementation
+
+/* Memory (loading & storing) instruction's implementations: MEMinstructions.c */
 unsigned short EA; // effective address
-unsigned short loadtoregister(unsigned short EA); // load from memory
-void storeinmemory(unsigned short EA, unsigned short RegisterValue);
-enum{EQ, NE, CSHS, CCLO, MI, PL, VS, VC, HI, LS, GE, LT, GT, LE, TR, FL}; // enum for the cex conditions cases
-//#define CEX_IS_DISABLED ((fcountbuff == CLEAR) && (tcountbuff == CLEAR))
+// A3
+void ld();
+void st();
+void ldr();
+void str();
+//unsigned short loadtoregister(unsigned short EA); // load from memory
+//void storeinmemory(unsigned short EA, unsigned short RegisterValue);
+
+/* Branching (Control Flow) instruction's implementations: BRANCHinstructions.c */
+// A4
+void bl(); // branch with link execution implementation
+void beqbz(); // beq/bz instruction's execution implementation
+void bnebnz(); // bne/bnz instruction's execution implementation
+void bcbhs(); // bcb/hs instruction's execution implementation
+void bncblo(); // bnc/blo instruction's execution implementation
+void bn(); // bn instruction's execution implementation
+void bge(); // bge instruction's execution implementation
+void blt(); // blt instruction's execution implementation
+void bra(); // bra instruction's execution implementation
+
+/* Conditional Execution Protoypes (CEX.c) */
+// A5
+//enum{EQ, NE, CSHS, CCLO, MI, PL, VS, VC, HI, LS, GE, LT, GT, LE, TR, FL}; // enum for the cex conditions cases
 int cex_condition; // cex true in effect flag
-void cex_enabled(int instructionnumber);
 unsigned short TC, FC; // true and false counters
-
-
-
-char currentInstructionBinary[BITS_PER_REGISTER]; // current instruction
-int currentInstructionValue; // current instruction in decimal
-char currentInstruction[HEX_CHARS_PER_REGISTER]; // current instruction in hex
+void cex(); // conditional execution function
 
 /* debugger.c funcitons and variables */
 extern unsigned short BreakpointValue; // breakpoint in decimal
-void debug(); // main debug function
-void UpdateRegistersBinary(char newcontent[HEX_CHARS_PER_REGISTER], int regnum); // update the registers binary content
-void ChangedRegistersBinary(char newcontent[BITS_PER_REGISTER], int regnum); // change the registers binary content
 void ChangedRegistersValue(unsigned short newcontent, int regnum); // change the registers value
-void ChangedRegistersHexString(char newcontent[HEX_CHARS_PER_REGISTER], int regnum); // change the registers hex string
-void process_instruction_debugger(); // process all instruction in debug mode
+void view_registers(); // view registers
+void edit_registers(); // edit register
+void memory_printer(); // print memory
+void edit_memory(); // edit memory
+void run_debugger(); // process all instruction in debug mode
 void step_debugger(); // step in debug mode
-
+void add_breakpoint(); // add breakpoint
+void print_time(); // print time
 
 /* xm23p.c */
-short SignExt(short offset, int msb);
+void InitializeCPU(); // initializes CPU
+void PrintMenuOptions(); // prints menu options
 
 #endif //XM23P_H

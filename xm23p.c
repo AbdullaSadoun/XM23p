@@ -54,11 +54,17 @@ void PrintMenuOptions(){
 function to print out the main menu options 
 */
     printf("===========MENU===========\n");
-    printf("l - Load file\n");
-    printf("m - Print memory\n");
-    printf("r - Run (Normal Mode)\n");
-    printf("s - Step (Single Step Mode)\n");
-    printf("d - Debugging menu (BETA)\n");
-    printf("q - Quit\n");
-    printf("Enter choice: ");
+    printf("l - load file\n");
+    printf("v - view registers\n");
+    printf("e - edit register values(word)\n");
+    printf("m - display memory\n");
+    printf("c - change in memory\n");
+    printf("r - run (normal)\n");
+    printf("s - step (normal)\n");
+    printf("b - breakpoint\n");
+    printf("1- run (debug)\n");
+    printf("2- step (debug)\n");
+    printf("3- view time count\n");
+    printf("q - quit\n");
+
 }

@@ -1,8 +1,29 @@
-to run: gcc -o main main.c debugger.c decode.c execute.c fetch.c loader.c xm23p.c 
+to run: 
+        gcc -o main main.c debugger.c decode.c execute.c fetch.c loader.c xm23p.c run.c psw.c BRANCHinstructions.c MEMinstructions.c REGinstructions.c cex.c
+        
+        
+        
+        gcc -o main main.c debugger.c decode.c execute.c fetch.c loader.c xm23p.c 
         gcc -o main main.c debugger.c decode.c execute.c fetch.c loader.c xm23p.c run.c
 
         gcc -o main main.c debugger.c decode.c execute.c fetch.c loader2.c loader.c xm23p.c 
         ./main
+
+
+
+? - lists the options (below)
+C - change a memory location (word)
+D - device information
+B - breakpoint
+L - load
+R - display regs
+S - set register values (word)
+T - reset XM-23 (via reset vector)
+M - display mem
+P - display PSW bits
+G - go (continuous or single step [toggle with 'I'])
+I - increment PC (toggle continuous run or single step)
+X - exit
 
 S0 10 0000 4345586571746573742E61736D0A
 S2 05 0010 FFFFEC

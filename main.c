@@ -27,47 +27,56 @@ int main(int argc, char* argv[]){
         case 'l':  // user chooses to load file
             printf("Enter filename: "); // prompt user for filename
             scanf("%s", filename); // get filename
-
             ProcessSRecords(filename); // loads and processes the s-records
             break;
         
-        case 'm': // user chooses to print memory
-            printf("select Memory I=IMEM D=DMEM B=both\n");
-            scanf(" %c", &memchoice);
-
-            if(memchoice == 'I' || memchoice == 'i'){ // print IMEM
-                PrintMEM((unsigned char*)IMEM); // prints instruction memory
-            } else if(memchoice == 'D' || memchoice == 'd'){ // print DMEM
-                PrintMEM((unsigned char*)DMEM); // prints data memory
-            } else if(memchoice == 'B' || memchoice == 'b'){ // print both
-                PrintMEM((unsigned char*)IMEM); // prints instruction memory
-                PrintMEM((unsigned char*)DMEM); // prints data memory
-            } else { // invalid choice
-                printf("Invalid choice\n");
-            }
+        case 'v': // user chooses to view registers
+            view_registers(); // prints registers
             break;
-    
-        case 'q': // user chooses to quit
-            return 0;
+
+        case 'e': // user chooses to view registers
+            view_registers(); // prints registers
+            break;
+
+        case 'm': // user chooses to print memory
+            memory_printer(); // prints memory
+            break;
+
+        case 'c': // user chooses to change a word in memory
+            edit_memory(); // edits memory 
 
         case 'r': // user chooses to run
             printf("starting address: %04X\n", RegistersValue[PC]);
-            process_instruction(); 
+            run(); // runs instructions from starting address
+            break;
+
+        case 's': // user chooses to step
+            step(); // step through instructions
+            break;
+
+        case 'b': // user chooses to add a breakpoint
+            add_breakpoint(); // adds a breakpoint
             break;
         
-        case 's': // user chooses to step
-            step(); // step function
+        case '1': // user chooses to run in debugging mode
+            run_debugger(); // runs in debugging mode
             break;
 
-        case 'd': // user chooses to debug
-            debug(); // debug mode function
+        case '2': // user chooses to step in debugging mode
+            step_debugger(); // steps in debugging mode
             break;
 
+        case '3': // user chooses to view the time counter
+            print_time(); // prints the time counter
+            break;
+
+        case 'q': // user chooses to quit
+            return 0;
+        
         default: // invalid choice
             printf("Invalid choice, try again!\n");
             break;
         }
     }
-    
     return 0;
 }
