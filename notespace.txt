@@ -1,13 +1,15 @@
 to run: 
         gcc -o main main.c debugger.c decode.c execute.c fetch.c loader.c xm23p.c run.c psw.c BRANCHinstructions.c MEMinstructions.c REGinstructions.c cex.c
         
-        
-        
-        gcc -o main main.c debugger.c decode.c execute.c fetch.c loader.c xm23p.c 
-        gcc -o main main.c debugger.c decode.c execute.c fetch.c loader.c xm23p.c run.c
-
-        gcc -o main main.c debugger.c decode.c execute.c fetch.c loader2.c loader.c xm23p.c 
         ./main
+
+
+
+
+
+
+
+
 
 
 
