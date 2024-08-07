@@ -62,10 +62,10 @@ Time of assembly: Sun 4 Aug 2024 01:38:46
  59	1024	525A	    cex     ls,$3,$2
  60	1026	67FC	    movl    V1,R4; instruction to get r4=00FF if true
  61	1028	4024	    add     R4,R4; instruction to get r4=01FE if true
- 62	102A	4024	    add     R4,R4; instruction to get r4=03FE if true
+ 62	102A	4024	    add     R4,R4; instruction to get r4=03FC if true
  63	102C	67FC	    movl    V1,R4; instruction to get r4=00FF if false
  64	102E	7FFC	    movh    V1,R4; instruction to get r4=FFFF if false
- 65	    	     	; expected R4:03FE
+ 65	    	     	; expected R4:03FC
  66	    	     	;
  67	    	     	;
  68	    	     	;

@@ -207,6 +207,7 @@ int cex_condition; // cex true in effect flag
 unsigned short TC, FC; // true and false counters
 void cex(); // conditional execution function
 void cex_enabled(int instructionnumber); // handle executions accordingly
+void reset_cex(); // reset cex counters
 
 /* debugger.c funcitons and variables */
 extern unsigned short BreakpointValue; // breakpoint in decimal

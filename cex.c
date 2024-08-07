@@ -90,7 +90,12 @@ void cex_enabled(int instructionnumber) {
     if (cex_condition == TRUE) { // cex in effect, true should execute
         if(TC > 0){ // check if there are any trues left
             execute(instructionnumber); // executes trues
-            TC--; // Decrement True counter
+            if(instructionnumber == BRA){
+                reset_cex(); // reset the TC and FC counters
+                return;
+            } else { // normal instruction
+                TC--; // Decrement True counter
+            }
         } else { // TC = 0 (execute all trues)
             printf("CEX skip\n"); // skip the falses
             FC--; // Decrement False counter
@@ -100,9 +105,27 @@ void cex_enabled(int instructionnumber) {
             printf("CEX skip\n"); // skip the trues
             TC--; // Decrement True counter
         } else { // TC = 0 and FC>0(executed all trues) falses left
-        execute(instructionnumber); // executes falses
-        FC--; // Decrement False counter
+            execute(instructionnumber); // executes falses
+            if(instructionnumber == BRA){
+                reset_cex(); // reset the TC and FC counters
+                return;
+            } else { // normal instruction
+                FC--; // Decrement False counter
+            }
         }
     }
+    return;
+}
+
+void reset_cex(){
+/*
+function to reset the TC and FC counters
+- prevents nesting cex instructions after a branching instruction was executed
+because of a cex condition
+- it will reset the TC and FC counters to 0
+- doing that would disable the cex effect on the next instructions
+*/
+    TC = 0;
+    FC = 0;
     return;
 }
