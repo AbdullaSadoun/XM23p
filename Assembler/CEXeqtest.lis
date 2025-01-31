@@ -1,0 +1,59 @@
+X-Makina Assembler - Version XM-23P Single Pass+ Assembler - Release 24.04.17
+Input file name: CEXeqtest.asm
+Time of assembly: Sun 4 Aug 2024 00:51:06 
+  1	    	     	; data segment
+  2	    	     	; FFFF stored in DMEM[FFFF]
+  3	    	     	    data
+  4	    	     	    org #FFFF
+  5	FFFF	FFFF	V1	word	#FFFF
+  6	    	     	;
+  7	    	     	;
+  8	    	     	;code segment
+  9	    	     	    code
+ 10	    	     	    org #1000
+ 11	    	     	MAIN
+ 12	    	     	;
+ 13	    	     	; testing PSW
+ 14	1000	4DBF		setcc	vsnzc ; check to see if the instruction works (PSW:11111)
+ 15	1002	4DDF		clrcc	vsnzc ; check to see if the instruction works (PSW:00000)
+ 16	    	     	;
+ 17	    	     	; setting PSW for cex testing
+ 18	1004	4DA7	    setcc   nzc ; Set N, Z, C flags (PSW: 00111)
+ 19	    	     	                ; EQ, CS, MI, LE, VC should be true
+ 20	    	     	                ; NE, PL, CC, GE, LT, GT should be false
+ 21	    	     	;
+ 22	1006	5012	    cex     eq,$2,$2 ; eq is true so r0=ffff
+ 23	1008	67F8	    movl    V1,R0; instruction to get r0.l to be 0xff if true
+ 24	100A	7FF8	    movh    V1,R0; instruction to get r0.h to be 0xff if true
+ 25	100C	67F9	    movl    V1,R1; instruction to get r1.l to be 0xff if true
+ 26	100E	7FF9	    movh    V1,R1; instruction to get r1.h to be 0xff if true 
+ 27	    	     	;   
+ 28	    	     	end MAIN
+Successful completion of assembly - 1P
+
+** Symbol table **
+
+Constants (Equates)
+Name                               	Type	Value	Decimal
+
+Labels (Code)
+Name                               	Type	Value	Decimal
+MAIN                               	REL	1000	4096	PRI
+
+Labels (Data)
+Name                               	Type	Value	Decimal
+V1                                 	REL	FFFF	-1	PRI
+
+Registers
+Name                               	Type	Value	Decimal
+R7                                 	REG	0007	7	PRI
+R6                                 	REG	0006	6	PRI
+R5                                 	REG	0005	5	PRI
+R4                                 	REG	0004	4	PRI
+R3                                 	REG	0003	3	PRI
+R2                                 	REG	0002	2	PRI
+R1                                 	REG	0001	1	PRI
+R0                                 	REG	0000	0	PRI
+
+.XME file: \\Mac\Home\Desktop\Computer Architecture\Assembler\CEXeqtest.xme
+

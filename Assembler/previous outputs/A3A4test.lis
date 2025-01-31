@@ -1,0 +1,141 @@
+X-Makina Assembler - Version XM-23P Single Pass+ Assembler - Release 24.04.17
+Input file name: A3A4test.asm
+Time of assembly: Wed 17 Jul 2024 17:00:08 
+  1	    	     	;
+  2	    	     	; Test of A3 and A4
+  3	    	     	; A3: Memory reads and writes
+  4	    	     	; A4: Branching
+  5	    	     	;
+  6	    	     	PC	equ	R7
+  7	    	     	SP	equ	R6
+  8	    	     	LR	equ	R5
+  9	    	     	NUL	equ	'\0'
+ 10	    	     	;
+ 11	    	     	; Data segment
+ 12	    	     	;
+ 13	    	     		Data
+ 14	    	     		org	#60
+ 15	0060	6E49	InStr	ascii	"Input string to copy\0"
+ 15	0062	7570
+ 15	0064	2074
+ 15	0066	7473
+ 15	0068	6972
+ 15	006A	676E
+ 15	006C	7420
+ 15	006E	206F
+ 15	0070	6F63
+ 15	0072	7970
+ 15	0074	0000
+ 16	    	     		org	#80
+ 17	0080	7878	OutStr	ascii	"xxxxxxxxxxxxxxxxxxxxxxxx"
+ 17	0082	7878
+ 17	0084	7878
+ 17	0086	7878
+ 17	0088	7878
+ 17	008A	7878
+ 17	008C	7878
+ 17	008E	7878
+ 17	0090	7878
+ 17	0092	7878
+ 17	0094	7878
+ 17	0096	7878
+ 18	    	     	;
+ 19	    	     	; Stack segment
+ 20	    	     	;
+ 21	    	     		org	#FE00
+ 22	FE00	0000		bss	#100
+ 23	    	     	StkTop	
+ 24	    	     	;
+ 25	    	     	; Code segment
+ 26	    	     	;
+ 27	    	     		Code
+ 28	    	     		org	#100
+ 29	    	     	;
+ 30	    	     	; ReadSubr - returns a char from R1 in R0
+ 31	    	     	;
+ 32	    	     	ReadSubr
+ 33	0100	58C8		ld.b	R1+,R0		; Read R1 into R0
+ 34	0102	7FF8		movh	#FF00,R0	; Overwrite MSByte
+ 35	0104	4C2F		mov	LR,PC		; Return
+ 36	0106	40BF		add	#FF,PC		; Must not execute
+ 37	    	     	;
+ 38	    	     	; Mainline
+ 39	    	     	;
+ 40	    	     	RWStr
+ 41	0108	6006		movl	StkTop,SP
+ 42	010A	7FFE		movh	StkTop,SP
+ 43	    	     	;
+ 44	010C	6B01		movlz	InStr,R1
+ 45	010E	6C02		movlz	OutStr,R2
+ 46	    	     	;
+ 47	    	     	RWLoop
+ 48	0110	1FF7		bl	ReadSubr
+ 49	0112	5F06		st	R0,-SP		; Char as parameter
+ 50	0114	5F16		st	R2,-SP		; Addr as parameter
+ 51	    	     	;
+ 52	0116	0005		bl	WriteSubr
+ 53	0118	58B2		ld	SP+,R2		; Restore Addr
+ 54	011A	58B0		ld	SP+,R0		; Restore Char
+ 55	    	     	;
+ 56	011C	45C0		cmp.b	NUL,R0
+ 57	011E	27F8		bne	RWLoop		; Not NUL, repeat
+ 58	    	     	;
+ 59	    	     	; NUL found, infinite loop until ^C
+ 60	    	     	;
+ 61	0120	3FFF	RWDone	bra	RWDone
+ 62	    	     	;
+ 63	    	     	; Writes a character to the destination string
+ 64	    	     	; Stack has Output address and char to output
+ 65	    	     	;
+ 66	    	     	WriteSubr
+ 67	0122	8030		ldr	SP,$0,R0	; R0 <- Addr of output string
+ 68	0124	8132		ldr	SP,$+2,R2	; R2 <- Character to output
+ 69	    	     	;
+ 70	0126	5C50		st.b	R2,R0
+ 71	    	     	;
+ 72	0128	4088		add	#1,R0		; Increment address
+ 73	012A	C006		str	R0,SP,$0
+ 74	    	     	;
+ 75	012C	4C2F		mov	LR,PC		; Return
+ 76	012E	40BF		add	#FF,PC		; Must not execute
+ 77	    	     	;
+ 78	    	     		end	RWStr
+
+Successful completion of assembly - 2P
+
+** Symbol table **
+
+Constants (Equates)
+Name                               	Type	Value	Decimal
+NUL                                	CON	0000	0	PRI
+
+Labels (Code)
+Name                               	Type	Value	Decimal
+RWDone                             	REL	0120	288	PRI
+WriteSubr                          	REL	0122	290	PRI
+RWLoop                             	REL	0110	272	PRI
+RWStr                              	REL	0108	264	PRI
+ReadSubr                           	REL	0100	256	PRI
+
+Labels (Data)
+Name                               	Type	Value	Decimal
+StkTop                             	REL	FF00	-256	PRI
+OutStr                             	REL	0080	128	PRI
+InStr                              	REL	0060	96	PRI
+
+Registers
+Name                               	Type	Value	Decimal
+LR                                 	REG	0005	5	PRI
+SP                                 	REG	0006	6	PRI
+PC                                 	REG	0007	7	PRI
+R7                                 	REG	0007	7	PRI
+R6                                 	REG	0006	6	PRI
+R5                                 	REG	0005	5	PRI
+R4                                 	REG	0004	4	PRI
+R3                                 	REG	0003	3	PRI
+R2                                 	REG	0002	2	PRI
+R1                                 	REG	0001	1	PRI
+R0                                 	REG	0000	0	PRI
+
+.XME file: \\Mac\Home\Desktop\Computer Architecture\Assembler\A3A4test.xme
+

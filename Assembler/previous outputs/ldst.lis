@@ -1,0 +1,130 @@
+X-Makina Assembler - Version XM-23P Single Pass+ Assembler - Release 24.04.17
+Input file name: ldst.asm
+Time of assembly: Thu 11 Jul 2024 01:49:42 
+  1	    	     	            ORG 0x0100
+  1	    	     	            ORG 0x0100
+			**** Directive ORG needs argument
+  2	    	     	DATA_START  DB 'eced3403', 0
+			**** Expecting INST or DIR
+  3	    	     	
+  4	    	     	; Initialize data memory where data will be copied using LD and ST instructions
+  5	    	     	            ORG 0x0110
+  5	    	     	            ORG 0x0110
+			**** Directive ORG needs argument
+  6	    	     	DATA_COPY   DB 8 DUP(?)
+			**** Expecting INST or DIR
+  7	    	     	
+  8	    	     	; Program starts here
+  9	    	     	            ORG 0x0200
+  9	    	     	            ORG 0x0200
+			**** Directive ORG needs argument
+ 10	    	     	
+ 11	    	     	; Load data from 0x0100 into registers using LD
+ 12	    	     	            MOV R0, 0x0100  ; Load the starting address of the source
+			**** Invalid register Not supplied
+ 12	    	     	            MOV R0, 0x0100  ; Load the starting address of the source
+			**** Unexpected symbol
+ 13	    	     	            MOV R1, 0x0110  ; Load the starting address of the destination
+			**** Invalid register Not supplied
+ 13	    	     	            MOV R1, 0x0110  ; Load the starting address of the destination
+			**** Unexpected symbol
+ 14	    	     	
+ 15	    	     	            LD R2, [R0]+    ; Load byte from source to R2 and increment source address
+			**** Invalid register (DATA only): Not supplied
+ 15	    	     	            LD R2, [R0]+    ; Load byte from source to R2 and increment source address
+			**** Unexpected symbol
+ 16	    	     	            ST [R1]+, R2    ; Store byte from R2 to destination and increment destination address
+			**** Invalid register DATA: [R1]+
+ 16	    	     	            ST [R1]+, R2    ; Store byte from R2 to destination and increment destination address
+			**** Unexpected symbol
+ 17	    	     	
+ 18	    	     	            LD R2, [R0]+    ; Repeat for the next byte
+			**** Invalid register (DATA only): Not supplied
+ 18	    	     	            LD R2, [R0]+    ; Repeat for the next byte
+			**** Unexpected symbol
+ 19	    	     	            ST [R1]+, R2
+			**** Invalid register DATA: [R1]+
+ 19	    	     	            ST [R1]+, R2
+			**** Unexpected symbol
+ 20	    	     	
+ 21	    	     	            LD R2, [R0]+
+			**** Invalid register (DATA only): Not supplied
+ 21	    	     	            LD R2, [R0]+
+			**** Unexpected symbol
+ 22	    	     	            ST [R1]+, R2
+			**** Invalid register DATA: [R1]+
+ 22	    	     	            ST [R1]+, R2
+			**** Unexpected symbol
+ 23	    	     	
+ 24	    	     	            LD R2, [R0]+
+			**** Invalid register (DATA only): Not supplied
+ 24	    	     	            LD R2, [R0]+
+			**** Unexpected symbol
+ 25	    	     	            ST [R1]+, R2
+			**** Invalid register DATA: [R1]+
+ 25	    	     	            ST [R1]+, R2
+			**** Unexpected symbol
+ 26	    	     	
+ 27	    	     	            LD R2, [R0]+
+			**** Invalid register (DATA only): Not supplied
+ 27	    	     	            LD R2, [R0]+
+			**** Unexpected symbol
+ 28	    	     	            ST [R1]+, R2
+			**** Invalid register DATA: [R1]+
+ 28	    	     	            ST [R1]+, R2
+			**** Unexpected symbol
+ 29	    	     	
+ 30	    	     	            LD R2, [R0]+
+			**** Invalid register (DATA only): Not supplied
+ 30	    	     	            LD R2, [R0]+
+			**** Unexpected symbol
+ 31	    	     	            ST [R1]+, R2
+			**** Invalid register DATA: [R1]+
+ 31	    	     	            ST [R1]+, R2
+			**** Unexpected symbol
+ 32	    	     	
+ 33	    	     	            LD R2, [R0]+
+			**** Invalid register (DATA only): Not supplied
+ 33	    	     	            LD R2, [R0]+
+			**** Unexpected symbol
+ 34	    	     	            ST [R1]+, R2
+			**** Invalid register DATA: [R1]+
+ 34	    	     	            ST [R1]+, R2
+			**** Unexpected symbol
+ 35	    	     	
+ 36	    	     	            LD R2, [R0]+
+			**** Invalid register (DATA only): Not supplied
+ 36	    	     	            LD R2, [R0]+
+			**** Unexpected symbol
+ 37	    	     	            ST [R1]+, R2
+			**** Invalid register DATA: [R1]+
+ 37	    	     	            ST [R1]+, R2
+			**** Unexpected symbol
+ 38	    	     	
+ 39	    	     	            HLT             ; Halt the program
+First pass errors - assembly terminated
+
+** Symbol table **
+
+Constants (Equates)
+Name                               	Type	Value	Decimal
+
+Labels (Code)
+Name                               	Type	Value	Decimal
+HLT                                	REL	0100	256	PRI
+DATA_COPY                          	REL	0100	256	PRI
+DATA_START                         	REL	0100	256	PRI
+
+Labels (Data)
+Name                               	Type	Value	Decimal
+
+Registers
+Name                               	Type	Value	Decimal
+R7                                 	REG	0007	7	PRI
+R6                                 	REG	0006	6	PRI
+R5                                 	REG	0005	5	PRI
+R4                                 	REG	0004	4	PRI
+R3                                 	REG	0003	3	PRI
+R2                                 	REG	0002	2	PRI
+R1                                 	REG	0001	1	PRI
+R0                                 	REG	0000	0	PRI
