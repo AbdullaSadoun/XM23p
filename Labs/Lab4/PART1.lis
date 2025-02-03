@@ -1,0 +1,87 @@
+X-Makina Assembler - Version XM-23P Single Pass+ Assembler - Release 24.04.17
+Input file name: PART1.asm
+Time of assembly: Wed 15 May 2024 21:33:36 
+  1	    	     	
+  2	    	     	;
+  3	    	     	; Sum an array of 16-bit numbers
+  4	    	     	; ECED 3403
+  5	    	     	; 15 May 24
+  6	    	     	;
+  7	    	     		CODE
+  8	    	     		org	#1000
+  9	    	     	;
+ 10	    	     	;
+ 11	1000	6A00	Main	movlz	Array,R0	; r0=Address of the array
+ 12	1002	5803		ld	R0,R3		; load stopper into r3
+ 13	1004	4090		add	#2,R0		; move r0 to the next element (first element to be summed) increment by 2 as bytes are in pairs
+ 14	1006	4C0A		mov	R1,R2		; setting r2 as sum register and making it 0
+ 15	    	     	;
+ 16	1008	5801	loop	ld	R0,R1		; load the array's element into r1
+ 17	100A	400A		add	R1,R2		; Add the element to the sum
+ 18	100C	4090		add	#2,R0		; Increment R0 to point to the next element in the array
+ 19	    	     	;
+ 20	    	     	; check if stopper is 0 to stop summing
+ 21	    	     	;
+ 22	100E	428B		sub	#1,R3		; stopper - 1
+ 23	1010	2001		bz	Done		; end loop if stopper is 0
+ 24	    	     	;
+ 25	1012	3FFA		bra	loop		; continue adding
+ 26	    	     	;
+ 27	    	     	; adding complete, result are in r2
+ 28	    	     	;
+ 29	    	     	Done
+ 30	    	     	;
+ 31	    	     	; Finished - busy wait
+ 32	    	     	;
+ 33	1014	3FFF	BWait	bra	BWait
+ 34	    	     	;
+ 35	    	     	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ 36	    	     	;
+ 37	    	     	; Data space
+ 38	    	     	;
+ 39	    	     		DATA
+ 40	    	     		org	#40
+ 41	    	     	;
+ 42	    	     	; the array of integers used:
+ 43	    	     	;
+ 44	0040	FFFF	Array	word	$-1		; (5=stopper in r3)
+ 45	0042	1000		word	#1000
+ 46	0044	2000		word	#2000
+ 47	0046	3000		word	#3000
+ 48	0048	4000	    word	#4000
+ 49	004A	5000	    word	#5000
+ 50	    	     	;
+ 51	    	     	; no store for result they remained in register
+ 52	    	     	;
+ 53	    	     		end	Main
+Successful completion of assembly - 2P
+
+** Symbol table **
+
+Constants (Equates)
+Name                               	Type	Value	Decimal
+
+Labels (Code)
+Name                               	Type	Value	Decimal
+BWait                              	REL	1014	4116	PRI
+Done                               	REL	1014	4116	PRI
+loop                               	REL	1008	4104	PRI
+Main                               	REL	1000	4096	PRI
+
+Labels (Data)
+Name                               	Type	Value	Decimal
+Array                              	REL	0040	64	PRI
+
+Registers
+Name                               	Type	Value	Decimal
+R7                                 	REG	0007	7	PRI
+R6                                 	REG	0006	6	PRI
+R5                                 	REG	0005	5	PRI
+R4                                 	REG	0004	4	PRI
+R3                                 	REG	0003	3	PRI
+R2                                 	REG	0002	2	PRI
+R1                                 	REG	0001	1	PRI
+R0                                 	REG	0000	0	PRI
+
+.XME file: \\Mac\Home\Desktop\Computer Architecture\Lab 1\PART1.xme
+

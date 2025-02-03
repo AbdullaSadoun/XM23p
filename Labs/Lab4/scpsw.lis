@@ -1,0 +1,40 @@
+X-Makina Assembler - Version XM-23P Single Pass+ Assembler - Release 24.04.17
+Input file name: scpsw.asm
+Time of assembly: Tue 9 Jul 2024 04:56:08 
+  1	    	     			org #1000
+  2	    	     	MAIN
+  3	1000	4DBF		setcc	vsnzc
+  4	1002	4DDF		clrcc	vsnzc 
+  5	1004	4DB1	  setcc   vc
+  6	1006	4DD1		clrcc   vc
+  7	    	     	DONE
+  8	1008	3FFF		bra		DONE			; loop
+  9	    	     	end MAIN
+Successful completion of assembly - 1P
+
+** Symbol table **
+
+Constants (Equates)
+Name                               	Type	Value	Decimal
+
+Labels (Code)
+Name                               	Type	Value	Decimal
+DONE                               	REL	1008	4104	PRI
+MAIN                               	REL	1000	4096	PRI
+
+Labels (Data)
+Name                               	Type	Value	Decimal
+
+Registers
+Name                               	Type	Value	Decimal
+R7                                 	REG	0007	7	PRI
+R6                                 	REG	0006	6	PRI
+R5                                 	REG	0005	5	PRI
+R4                                 	REG	0004	4	PRI
+R3                                 	REG	0003	3	PRI
+R2                                 	REG	0002	2	PRI
+R1                                 	REG	0001	1	PRI
+R0                                 	REG	0000	0	PRI
+
+.XME file: \\Mac\Home\Desktop\Computer Architecture\Assembler\scpsw.xme
+

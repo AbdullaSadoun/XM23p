@@ -1,0 +1,87 @@
+X-Makina Assembler - Version XM-23P Single Pass+ Assembler - Release 24.04.17
+Input file name: Part3v1.asm
+Time of assembly: Wed 15 May 2024 21:19:42 
+  1	    	     	;
+  2	    	     	; Set bits in a register counter using shifts
+  3	    	     	; ECED 3403
+  4	    	     	; 15 May 24
+  5	    	     	;
+  6	    	     	Count   equ     R0      ; Count used in place of R0
+  7	    	     	DataVal equ     R1      ; DataVal - R1
+  8	    	     	One     equ     R2      ; One constant - R2
+  9	    	     	;
+ 10	    	     		CODE
+ 11	    	     		org     #1000
+ 12	    	     	Start
+ 13	    	     	;
+ 14	    	     	; Initialize the register whose bits we want to count
+ 15	    	     	; Assume the register R1 contains the value for which we need to count set bits
+ 16	    	     	;
+ 17	    	     		movlz   $0xFFFF,DataVal  ; Load test value directly into DataVal (R1)
+			**** Bad numeric value or invalid label: $0xFFFF
+ 18	1000	6800		movlz   $0,Count         ; Count = 0
+ 19	1002	680A		movlz   $1,One           ; One constant for incrementing and bit masking
+ 20	    	     	;
+ 21	    	     	; Check bits until all 16 bits are processed
+ 22	    	     	;
+ 23	1004	68B3		movlz   #16,R3           ; Initialize R3 with 16, the number of bits in R1
+ 24	    	     	BC_Loop
+ 25	1006	4C0C		mov     DataVal,R4       ; Copy DataVal to R4 for manipulation
+ 26	1008	4714		and     One,R4,R4       ; Isolate the lowest bit of DataVal
+ 27	100A	458C		cmp     #1,R4            ; Compare the isolated bit with 1
+ 28	100C	23FF		beq     IncrementCount    ; If the lowest bit is 1, increment the count
+ 29	    	     	;
+ 30	    	     	ShiftRight
+ 31	100E	4D01		sra     DataVal           ; Arithmetic shift right by 1, move to the next bit
+ 32	1010	428B		sub     #1,R3            ; Decrement the bit count
+ 33	1012	4583		cmp     #0,R3            ; Check if all bits have been processed
+ 34	1014	27F8		bne     BC_Loop           ; Continue looping if not all bits processed
+ 35	1016	3FFF		bra     Done              ; If all bits have been processed, go to Done
+ 36	    	     	;
+ 37	    	     	IncrementCount
+ 38	1018	4010		add     One,Count        ; Increment the count of set bits
+ 39	101A	3FF9		bra     ShiftRight        ; Continue checking the next bit
+ 40	    	     	;
+ 41	    	     	Done
+ 42	101C	3FFF		bra     Done              ; Infinite loop (or replace with a suitable end)
+ 43	    	     	;
+ 44	    	     	; Data space (if needed, remove or comment out if using direct loading)
+ 45	    	     	;
+ 46	    	     		DATA
+ 47	    	     		org     #2000
+ 48	    	     	Data    word    #FFFF         ; Example data value to be counted
+			**** DATA: Unexpected symbol
+ 49	    	     	;
+ 50	    	     		end     Start
+
+First pass errors - assembly terminated
+
+** Symbol table **
+
+Constants (Equates)
+Name                               	Type	Value	Decimal
+
+Labels (Code)
+Name                               	Type	Value	Decimal
+Done                               	REL	101C	4124	PRI
+ShiftRight                         	REL	100E	4110	PRI
+IncrementCount                     	REL	1018	4120	PRI
+BC_Loop                            	REL	1006	4102	PRI
+Start                              	REL	1000	4096	PRI
+
+Labels (Data)
+Name                               	Type	Value	Decimal
+
+Registers
+Name                               	Type	Value	Decimal
+One                                	REG	0002	2	PRI
+DataVal                            	REG	0001	1	PRI
+Count                              	REG	0000	0	PRI
+R7                                 	REG	0007	7	PRI
+R6                                 	REG	0006	6	PRI
+R5                                 	REG	0005	5	PRI
+R4                                 	REG	0004	4	PRI
+R3                                 	REG	0003	3	PRI
+R2                                 	REG	0002	2	PRI
+R1                                 	REG	0001	1	PRI
+R0                                 	REG	0000	0	PRI
