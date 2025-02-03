@@ -1,0 +1,44 @@
+X-Makina Assembler - Version XM-23P Single Pass+ Assembler - Release 24.04.17
+Input file name: ADD-ADDC.asm
+Time of assembly: Wed 26 Jun 2024 13:19:15 
+  1	    	     			org #1000
+  2	    	     	MAIN
+  3	1000	7C80		movh	#9000,R0
+  4	1002	7C81		movh	#9000,R1
+  5	1004	4008		add	R1,R0	;producing carry and overflow flag using word addition
+  6	1006	4180		addc	$0,R0	;adding 0 to a register with carry of 1, clearing flags
+  7	1008	6008		movl	$1,R0
+  8	100A	67F9		movl	$-1,R1
+  9	100C	4048		add.b	R1,R0	;producing a zero flag using byte addition
+ 10	100E	4048		add.b	R1,R0	;producing a negative flag
+ 11	    	     	DONE
+ 12	1010	3FFF		bra		DONE			; loop
+ 13	    	     	end MAIN
+Successful completion of assembly - 1P
+
+** Symbol table **
+
+Constants (Equates)
+Name                               	Type	Value	Decimal
+
+Labels (Code)
+Name                               	Type	Value	Decimal
+DONE                               	REL	1010	4112	PRI
+MAIN                               	REL	1000	4096	PRI
+
+Labels (Data)
+Name                               	Type	Value	Decimal
+
+Registers
+Name                               	Type	Value	Decimal
+R7                                 	REG	0007	7	PRI
+R6                                 	REG	0006	6	PRI
+R5                                 	REG	0005	5	PRI
+R4                                 	REG	0004	4	PRI
+R3                                 	REG	0003	3	PRI
+R2                                 	REG	0002	2	PRI
+R1                                 	REG	0001	1	PRI
+R0                                 	REG	0000	0	PRI
+
+.XME file: \\Mac\Home\Desktop\A2 Tests\ADD-ADDC.xme
+

@@ -1,0 +1,43 @@
+X-Makina Assembler - Version XM-23P Single Pass+ Assembler - Release 24.04.17
+Input file name: AND.asm
+Time of assembly: Wed 26 Jun 2024 13:19:24 
+  1	    	     			org #1000
+  2	    	     	MAIN
+  3	1000	7FF8		MOVH	#FFFF,R0
+  4	1002	67F8		MOVL	#FF,R0
+  5	1004	6041		MOVL	#08,R1
+  6	1006	4701		AND 	R0,R1		;produce no flags using byte and register source
+  7	1008	6782		MOVL 	#F0,R2
+  8	100A	4742		AND.B	R0,R2		;produce negative flag using word and register source	
+  9	100C	4780		AND 	$0,R0		;produce zero flag using word and constant source
+ 10	    	     	DONE
+ 11	100E	3FFF		bra	DONE		; loop
+ 12	    	     	end MAIN
+Successful completion of assembly - 1P
+
+** Symbol table **
+
+Constants (Equates)
+Name                               	Type	Value	Decimal
+
+Labels (Code)
+Name                               	Type	Value	Decimal
+DONE                               	REL	100E	4110	PRI
+MAIN                               	REL	1000	4096	PRI
+
+Labels (Data)
+Name                               	Type	Value	Decimal
+
+Registers
+Name                               	Type	Value	Decimal
+R7                                 	REG	0007	7	PRI
+R6                                 	REG	0006	6	PRI
+R5                                 	REG	0005	5	PRI
+R4                                 	REG	0004	4	PRI
+R3                                 	REG	0003	3	PRI
+R2                                 	REG	0002	2	PRI
+R1                                 	REG	0001	1	PRI
+R0                                 	REG	0000	0	PRI
+
+.XME file: \\Mac\Home\Desktop\A2 Tests\AND.xme
+
